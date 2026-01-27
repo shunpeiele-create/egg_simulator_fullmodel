@@ -5,7 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Booth Posting Tool v91 - Ultimate</title>
+    <title>Booth Posting Tool v92 - Final Design</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    
     <style>
         :root {
             --primary-bg: #f8f8f8;
@@ -17,8 +22,16 @@
             --overlay-dim: rgba(0,0,0,0.4);
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; outline: none; }
-        body { margin: 0; padding: 0; font-family: -apple-system, "Hiragino Kaku Gothic ProN", sans-serif; background: var(--primary-bg); overflow: hidden; height: 100vh; width: 100vw; }
+        /* フォントの指定：英語にFutura、日本語に源ノ角(Noto Sans JP)を適用 */
+        * { 
+            box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent; 
+            user-select: none; 
+            outline: none; 
+            font-family: "futura-pt", Futura, "Source Han Sans JP", "Noto Sans JP", sans-serif;
+        }
+        
+        body { margin: 0; padding: 0; background: var(--primary-bg); overflow: hidden; height: 100vh; width: 100vw; }
 
         .manual-saver-trigger { position: fixed; top: 0; left: 0; width: 80px; height: 80px; z-index: 10000; cursor: pointer; }
         .admin-trigger { position: absolute; top: 15px; right: 15px; width: 50px; height: 50px; background: none; border: none; cursor: pointer; font-size: 28px; color: #eee; z-index: 15000; display: flex; justify-content: center; align-items: center; }
@@ -34,7 +47,7 @@
         .preview-outer { flex: 1; display: flex; justify-content: center; align-items: center; position: relative; }
         .default-img { position: absolute; width: 60%; max-height: 40%; object-fit: contain; z-index: 1; transition: opacity 0.8s ease; }
         
-        /* 飛行エフェクト */
+        /* 飛行エフェクト：連動Keyframes */
         .preview-wrapper { position: relative; height: 50%; aspect-ratio: 179 / 232; display: flex; justify-content: center; align-items: center; z-index: 2; opacity: 0; transform: translateY(0) scale(1); }
         .preview-wrapper.animate-on { transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55), opacity: 0.4s ease, filter 0.5s ease; }
         .preview-wrapper.rise { transform: scale(1.15) translateY(-30px); opacity: 1 !important; filter: drop-shadow(0 30px 20px rgba(0,0,0,0.15)); }
@@ -45,7 +58,7 @@
             30% { transform: scale(1.2) translateY(-60px); opacity: 1; }
             100% { transform: scale(0.2) translateY(-150vh); opacity: 0; }
         }
-        .preview-wrapper.fly { animation: snapLaunch 1.1s cubic-bezier(0.45, 0, 0.55, 1) forwards !important; }
+        .preview-wrapper.fly { animation: snapLaunch 1.1s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards !important; }
 
         .layer { position: absolute; width: 100%; height: 100%; object-fit: contain; transition: 0.4s ease; }
 
@@ -53,7 +66,7 @@
         .section.locked { opacity: 0.15; pointer-events: none; }
         @keyframes unlockBounce { 0%, 100% {transform:translateY(0)} 30% {transform:translateY(-8px)} }
         .unlocking { animation: unlockBounce 0.5s ease; }
-        .section-label { font-size: 14px; font-weight: 800; color: #000; margin-bottom: 12px; display: block; }
+        .section-label { font-size: 15px; font-weight: 900; color: #000; margin-bottom: 12px; display: block; letter-spacing: 0.05em; }
         .grid-colors { display: flex; gap: 16px; flex-wrap: wrap; }
         .color-dot { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border); overflow: hidden; background-size: 180%; background-position: center 10%; cursor: pointer; position: relative; }
         .color-dot.active::after { content: ''; position: absolute; inset: 0; border: 3px solid #000; border-radius: 50%; }
@@ -66,27 +79,23 @@
         body.saver-active #saver-layer { display: block; }
         .community-item { position: absolute; width: 34px; height: 44px; pointer-events: none; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); will-change: left, top, transform; }
         .saver-active .community-item { width: 80px; height: 104px; transition: width 0.8s, height 0.8s; }
-        @keyframes popFlash { 0% { transform: scale(0); filter: brightness(3); } 50% { transform: scale(2.2); } 100% { transform: scale(1) rotate(var(--base-rot)); filter: brightness(1); } }
-        .new-arrival { animation: popFlash 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
         
         #saver-guide { position: fixed; bottom: 50px; right: 50px; width: 400px; opacity: 0; transition: 0.5s; z-index: 11000; pointer-events: none; cursor: pointer; }
 
-        .alert-text { font-size: 11px; color: var(--alert); text-align: center; margin-bottom: 8px; font-weight: 800; opacity: 0; transition: 0.3s; }
-        .alert-text.show { opacity: 1; }
-        .submit-btn { width: 100%; padding: 22px; background: #000; color: #fff; border: none; border-radius: 20px; font-size: 18px; font-weight: 800; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+        .submit-btn { width: 100%; padding: 22px; background: #000; color: #fff; border: none; border-radius: 20px; font-size: 19px; font-weight: 900; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; letter-spacing: 0.08em; }
         .submit-btn:disabled { background: var(--disabled); color: #8e8e93; }
 
         .overlay { position: fixed; inset: 0; background: var(--overlay-dim); z-index: 50000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.4s ease; }
         .overlay.show { display: flex; opacity: 1; }
-        .survey-card { background: #fff; width: 90%; max-width: 1050px; height: 85%; border-radius: 40px; overflow: hidden; display: grid; grid-template-columns: 1fr 1.2fr; box-shadow: 0 40px 100px rgba(0,0,0,0.3); }
+        .survey-card { background: #fff; width: 90%; max-width: 1050px; height: 85%; border-radius: 40px; overflow: hidden; display: grid; grid-template-columns: 1fr 1.2fr; }
         .survey-preview { background: #f9f9f9; display: flex; justify-content: center; align-items: center; padding: 60px; }
         .survey-form { padding: 40px 50px; display: flex; flex-direction: column; justify-content: center; overflow-y: auto; }
-        .chip { padding: 14px 20px; border: 1px solid var(--border); border-radius: 12px; background: #fff; font-weight: 600; cursor: pointer; font-size: 13px; margin: 0 8px 8px 0; display: inline-block; }
+        .chip { padding: 14px 20px; border: 1px solid var(--border); border-radius: 12px; background: #fff; font-weight: 700; cursor: pointer; font-size: 13px; margin: 0 8px 8px 0; display: inline-block; }
         .chip.active { background: #000; color: #fff; }
 
         #thanks-overlay { position: absolute; inset: 0; background: rgba(255,255,255,0.95); display: none; justify-content: center; align-items: center; z-index: 100; flex-direction: column; opacity: 0; transition: opacity 0.4s ease; }
         #thanks-overlay.show { display: flex; opacity: 1; }
-        .admin-menu { background: #fff; padding: 40px; border-radius: 30px; width: 480px; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,0.1); }
+        .admin-menu { background: #fff; padding: 40px; border-radius: 30px; width: 500px; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,0.1); }
         .admin-btn { width: 100%; padding: 18px; margin: 5px 0; border: 1px solid #ddd; background: #fff; font-weight: 700; border-radius: 15px; cursor: pointer; }
     </style>
 </head>
@@ -112,7 +121,7 @@
         <div id="thanks-overlay">
             <div style="font-size: 70px;">✓</div>
             <h2 style="font-size: 32px; font-weight: 900;">THANK YOU</h2>
-            <p>ご投票ありがとうございました</p>
+            <p style="font-size: 16px; color: var(--text-sub);">ご投票ありがとうございました</p>
         </div>
     </div>
 
@@ -128,11 +137,11 @@
             </section>
             <span class="section-label">COMMUNITY <small style="color:var(--text-sub); font-weight:400;">みんなのEGG MOUSE</small></span>
             <div id="community-area" class="community-area-box"></div>
-            <div style="font-size:10px; color:var(--text-sub); text-align:right; margin-top:5px; font-weight:600;">最新の20件 <small>(Latest 20 posts)</small></div>
+            <div style="font-size:10px; color:var(--text-sub); text-align:right; margin-top:5px; font-weight:700;">最新の20件 (Latest 20 posts)</div>
         </div>
         <div id="btn-container">
             <div id="cover-alert" class="alert-text">カバーを選んでください <small>(Please choose a cover)</small></div>
-            <button id="submitBtn" class="submit-btn" onclick="handlePostAction()" disabled><span>POST NOW</span><small>投稿する</small></button>
+            <button id="submitBtn" class="submit-btn" onclick="handlePostAction()" disabled><span>POST NOW</span><small style="font-size:11px; font-weight:400;">投稿する</small></button>
         </div>
     </div>
 </div>
@@ -141,7 +150,7 @@
     <div class="survey-card">
         <div class="survey-preview" id="survey-clone-target"></div>
         <div class="survey-form">
-            <h2 style="font-size:32px; font-weight:900;">This is your EGG MOUSE!</h2>
+            <h2 style="font-size:32px; font-weight:900; margin-bottom:5px;">This is your EGG MOUSE!</h2>
             <p style="font-size:14px; color:var(--text-sub); margin-bottom:30px;">アンケートにご協力ください（任意）<br>Please help us with our survey (Optional)</p>
             <div id="age-chips"><span class="section-label">年齢 Age</span><div class="chip" onclick="setSurvey('age','30歳未満')">30歳未満 (Under 30)</div><div class="chip" onclick="setSurvey('age','30代')">30代 (30s)</div><div class="chip" onclick="setSurvey('age','40代')">40代 (40s)</div><div class="chip" onclick="setSurvey('age','50歳以上')">50歳以上 (Over 50)</div><div class="chip" onclick="setSurvey('age','選択しない')">選択しない (N/A)</div></div>
             <div id="gender-chips" style="margin-top:20px;"><span class="section-label">性別 Gender</span><div class="chip" onclick="setSurvey('gender','男性')">男性 (Male)</div><div class="chip" onclick="setSurvey('gender','女性')">女性 (Female)</div><div class="chip" onclick="setSurvey('gender','選択しない')">選択しない (N/A)</div></div>
@@ -211,7 +220,7 @@
         selectedBase = id; document.getElementById('img-default').style.opacity='0'; 
         const p = document.getElementById('main-preview'); p.style.opacity='1'; p.classList.remove('rise', 'fly');
         document.querySelectorAll('.color-dot').forEach((el,idx)=>el.classList.toggle('active', (idx+1)===id));
-        document.getElementById('section-cover').classList.remove('locked'); triggerBounce(document.getElementById('section-cover'));
+        const cs = document.getElementById('section-cover'); cs.classList.remove('locked'); triggerBounce(cs);
         document.getElementById('cover-alert').classList.add('show'); updatePreview();
     }
     function selectCover(id){
@@ -237,11 +246,7 @@
     function hideSurvey(){ document.getElementById('survey-overlay').classList.remove('show'); }
     function setSurvey(k,v){ surveyInput[k]=v; document.querySelectorAll(`#${k}-chips .chip`).forEach(c=>c.classList.toggle('active', c.innerText.includes(v))); }
     function updateFinalBtn(){ document.getElementById('finalPostBtn').disabled = !document.getElementById('agree-cb').checked; }
-
-    function openAdmin(){ 
-        const set = JSON.parse(localStorage.getItem(CONFIG.settingsKey) || '{"pw":"1234"}');
-        if(prompt("Password") === set.pw) document.getElementById('admin-overlay').classList.add('show'); 
-    }
+    function openAdmin(){ const set = JSON.parse(localStorage.getItem(CONFIG.settingsKey) || '{"pw":"1234"}'); if(prompt("Password") === set.pw) document.getElementById('admin-overlay').classList.add('show'); }
     function closeAdmin(){ document.getElementById('admin-overlay').classList.remove('show'); }
     function toggleSurveySetting(){ isSurveyEnabled=!isSurveyEnabled; const s = JSON.parse(localStorage.getItem(CONFIG.settingsKey)||'{}'); s.survey=isSurveyEnabled; localStorage.setItem(CONFIG.settingsKey, JSON.stringify(s)); updateSurveyUI(); }
     function updateSurveyUI(){ const l=document.getElementById('survey-status-label'); l.innerText=isSurveyEnabled?'ON':'OFF'; l.style.color=isSurveyEnabled?'#34c759':'#8e8e93'; }
@@ -252,7 +257,7 @@
         const rect = target.getBoundingClientRect();
         const tx = ((e.clientX - rect.left) / rect.width) * 100, ty = ((e.clientY - rect.top) / rect.height) * 100;
         let found = null;
-        communityItems.forEach(i=>{ const hr = isSaverActive ? 4.5 : 3.5; if(Math.sqrt((tx-i.x)**2+(ty-i.y)**2) < hr) found=i; });
+        communityItems.forEach(i=>{ if(Math.sqrt((tx-i.x)**2+(ty-i.y)**2) < (isSaverActive?4.5:3.5)) found=i; });
         if(found){ grabbedItem=found; grabbedItem.vx=0; grabbedItem.vy=0; }
         else { communityItems.forEach(i=>{
             const dx=i.x-tx, dy=i.y-ty, d=Math.sqrt(dx*dx+dy*dy), r=isSaverActive?20:15;
@@ -316,7 +321,6 @@
         communityItems.push(it); if(communityItems.length>25) communityItems.shift().el.remove(); 
     }
     
-    // 復活：CSVダウンロード機能
     function downloadCSV(){
         const d = JSON.parse(localStorage.getItem(CONFIG.storageKey)||'[]');
         const csv = "\ufeffTime,Base,Cover,Age,Gender\n" + d.map(i=>`${i.t},${i.b},${i.c},${i.age},${i.gen}`).join("\n");
