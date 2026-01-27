@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>EGG MOUSE SIMULATOR v132</title>
+    <title>EGG MOUSE SIMULATOR v133</title>
     
     <link rel="apple-touch-icon" href="image/base_1.png">
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
@@ -42,7 +43,9 @@
 
         .title-area { position: absolute; top: 60px; left: 0; width: 100%; height: 60px; display: flex; justify-content: center; z-index: 20; pointer-events: none; }
         .preview-outer { flex: 1; display: flex; justify-content: center; align-items: center; position: relative; width: 100%; height: 100%; }
-        .default-img { position: absolute; width: 60%; max-height: 40%; object-fit: contain; z-index: 1; transition: opacity 0.8s ease; }
+        
+        /* 修正：Default画像を1.5倍に拡大 (60% -> 90%) */
+        .default-img { position: absolute; width: 90%; max-height: 70%; object-fit: contain; z-index: 1; transition: opacity 0.8s ease; }
         
         .preview-wrapper { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1); height: 55%; aspect-ratio: 179 / 232; display: flex; justify-content: center; align-items: center; z-index: 2; opacity: 0; }
         .preview-wrapper.animate-on { transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55), opacity: 0.4s ease; }
@@ -55,7 +58,6 @@
             100% { transform: translate(-50%, -200vh) scale(0.2); opacity: 0; }
         }
         .preview-wrapper.fly { animation: snapLaunch 1.1s cubic-bezier(0.45, 0, 0.55, 1) forwards !important; }
-
         .layer { position: absolute; width: 100%; height: 100%; object-fit: contain; transition: 0.4s ease; }
 
         .section { margin-bottom: 40px; transition: opacity 0.4s ease; transform-origin: center top; }
@@ -66,16 +68,15 @@
         .color-dot { width: 50px; height: 50px; border-radius: 50%; border: 1px solid var(--border); overflow: hidden; background-size: 180%; background-position: center 10%; cursor: pointer; position: relative; }
         .color-dot.active::after { content: ''; position: absolute; inset: 0; border: 3px solid #000; border-radius: 50%; }
         
+        /* 11個対応グリッド */
         .grid-covers { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; width: 100%; }
         .cover-item { aspect-ratio: 1.1; border: 1px solid var(--border); border-radius: 10px; background: #fff; display: flex; justify-content: center; align-items: center; padding: 4px; cursor: pointer; }
         .cover-item.active { border: 2.5px solid #000; background: #fafafa; }
         .cover-thumb { width: 55%; height: 55%; object-fit: contain; }
 
         .community-area-box { flex: 1; position: relative; overflow: hidden; background: #fcfcfc; border-radius: 20px; border: 1px dashed var(--border); cursor: grab; touch-action: none; z-index: 5; margin-bottom: 25px; min-height: 100px; }
-        
         #saver-layer { position: fixed; inset: 0; background: #fff; z-index: 9000; display: none; cursor: grab; touch-action: none; }
         body.saver-active #saver-layer { display: block; }
-        
         .community-item { position: absolute; width: 34px; height: 44px; pointer-events: none; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); will-change: left, top, transform; backface-visibility: hidden; transition: width 0.8s, height 0.8s; }
 
         @keyframes popInFlash {
@@ -87,12 +88,12 @@
         @keyframes unlockBounce { 0% { transform: translateY(0); } 40% { transform: translateY(-15px); } 100% { transform: translateY(0); } }
         .is-unlocking { animation: unlockBounce 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
-        /* 修正：ガイド画像のサイズを倍増 (400px -> 800px) */
+        /* 修正：ガイド画像のサイズ調整 (800px -> 540px) */
         #saver-guide { 
             position: fixed; 
-            bottom: 60px; /* 少し上に調整 */
-            right: 60px;  /* 余白も少し調整 */
-            width: 800px; /* サイズ倍増 */
+            bottom: 60px; 
+            right: 60px; 
+            width: 540px; 
             opacity: 0; 
             transition: 0.5s; 
             z-index: 11000; 
@@ -212,12 +213,7 @@
                 img.onerror=()=>itm.remove();
             }
         }
-        const totalCovers = cc.children.length; 
-        let cols = 4; 
-        if (totalCovers <= 6) cols = 3; 
-        else if (totalCovers >= 9) cols = 5;
         cc.style.gridTemplateColumns = `repeat(4, 1fr)`;
-
         setTimeout(()=>loadCommunity(true), 1000);
         requestAnimationFrame(updateAnimation);
         resetInactivityTimer();
@@ -227,19 +223,14 @@
         window.addEventListener('pointerup', ()=>grabbedItem=null);
     }
 
-    function triggerBounce(el) {
-        el.classList.remove('is-unlocking');
-        void el.offsetWidth;
-        el.classList.add('is-unlocking');
-    }
+    function triggerBounce(el) { el.classList.remove('is-unlocking'); void el.offsetWidth; el.classList.add('is-unlocking'); }
 
     function handlePostAction() { if (isSurveyEnabled) showSurvey(); else executeFinalPost(); }
     function executeFinalPost() {
         document.getElementById('global-guard').style.display = 'block';
         if (isSurveyEnabled) hideSurvey();
         const p = document.getElementById('main-preview');
-        p.classList.remove('rise', 'fly'); void p.offsetWidth;
-        p.classList.add('fly'); 
+        p.classList.remove('rise', 'fly'); void p.offsetWidth; p.classList.add('fly'); 
         localStorage.setItem(CONFIG.storageKey, JSON.stringify([...JSON.parse(localStorage.getItem(CONFIG.storageKey)||'[]'), {t:new Date().toLocaleString(), b:selectedBase, c:selectedCover, age:surveyInput.age, gen:surveyInput.gender}]));
         setTimeout(() => {
             addCommunityItem(selectedBase, selectedCover, false);
@@ -252,20 +243,15 @@
         selectedBase = id; document.getElementById('img-default').style.opacity='0'; 
         const p = document.getElementById('main-preview'); p.style.opacity='1'; p.classList.remove('rise', 'fly');
         document.querySelectorAll('.color-dot').forEach((el,idx)=>el.classList.toggle('active', (idx+1)===id));
-        const cs = document.getElementById('section-cover'); 
-        cs.classList.remove('locked');
-        triggerBounce(cs);
-        updatePreview();
+        const cs = document.getElementById('section-cover'); cs.classList.remove('locked');
+        triggerBounce(cs); updatePreview();
     }
     function selectCover(id){
         if(!selectedBase) return; selectedCover = id;
         document.querySelectorAll('.cover-item').forEach(el=>{ const isNone=el.innerText.includes('REMOVE')&&id===0; const hasMatch=el.querySelector('img')&&el.querySelector('img').src.includes(`cover_${id}.png`); el.classList.toggle('active', isNone||hasMatch); });
         document.getElementById('submitBtn').disabled = (id===0);
         document.getElementById('cover-alert').classList.toggle('show', id===0);
-        if(id !== 0) { 
-            const btn = document.getElementById('submitBtn'); 
-            triggerBounce(btn);
-        }
+        if(id !== 0) { const btn = document.getElementById('submitBtn'); triggerBounce(btn); }
         updatePreview();
     }
 
