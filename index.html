@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>EGG MOUSE SIMULATOR v119</title>
+    <title>EGG MOUSE SIMULATOR v120</title>
     
     <link rel="apple-touch-icon" href="image/base_1.png">
     
@@ -58,8 +58,6 @@
 
         .section { margin-bottom: 20px; transition: opacity 0.4s ease; }
         .section.locked { opacity: 0.15; pointer-events: none; }
-        
-        /* 修正：タイトル系文字を+2pt (13px -> 15px) */
         .section-label { font-size: 15px; font-weight: 900; color: #000; margin-bottom: 10px; display: block; letter-spacing: 0.05em; }
         
         .grid-colors { display: flex; gap: 14px; flex-wrap: wrap; }
@@ -76,13 +74,15 @@
         #saver-layer { position: fixed; inset: 0; background: #fff; z-index: 9000; display: none; cursor: grab; touch-action: none; }
         body.saver-active #saver-layer { display: block; }
         
+        /* 修正：コミュニティ内とセーバー時の基本サイズを定義 */
         .community-item { 
             position: absolute; 
-            width: 50px; height: 65px;
+            width: 34px; height: 44px; /* 最初からこのサイズ */
             pointer-events: none; 
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); 
             will-change: left, top, transform;
             backface-visibility: hidden;
+            transition: width 0.8s, height 0.8s; /* サイズ変更を滑らかに */
         }
         
         #saver-guide { position: fixed; bottom: 50px; right: 50px; width: 400px; opacity: 0; transition: 0.5s; z-index: 11000; pointer-events: none; cursor: pointer; }
@@ -157,10 +157,7 @@
             <div id="age-chips"><span class="section-label">年齢 Age</span><div class="chip" onclick="setSurvey('age','30歳未満')">30歳未満 (Under 30)</div><div class="chip" onclick="setSurvey('age','30代')">30代 (30s)</div><div class="chip" onclick="setSurvey('age','40代')">40代 (40s)</div><div class="chip" onclick="setSurvey('age','50歳以上')">50歳以上 (Over 50)</div><div class="chip" onclick="setSurvey('age','選択しない')">選択しない (N/A)</div></div>
             <div id="gender-chips" style="margin-top:20px;"><span class="section-label">性別 Gender</span><div class="chip" onclick="setSurvey('gender','男性')">男性 (Male)</div><div class="chip" onclick="setSurvey('gender','女性')">女性 (Female)</div><div class="chip" onclick="setSurvey('gender','選択しない')">選択しない (N/A)</div></div>
             <div style="font-size:11px; color:var(--text-sub); line-height:1.5; margin:20px 0 25px; padding:15px; background:#f2f2f7; border-radius:12px; font-weight:700;">【個人情報の取り扱い】ご入力いただいた情報は統計データとして活用いたします。特定の個人を識別する目的では使用いたしません。<br><span style="font-weight:400;">[Privacy Policy] Data used only for statistical purposes.</span></div>
-            <label style="display:flex; align-items:center; gap:12px; font-weight:900; margin-bottom:30px; cursor:pointer;">
-                <input type="checkbox" id="agree-cb" style="width:24px; height:24px; accent-color:#000;" onchange="updateFinalBtn()">
-                <span>個人情報の取り扱い事項に同意する <small style="font-weight:400;">(Agree to the privacy policy)</small></span>
-            </label>
+            <label style="display:flex; align-items:center; gap:12px; font-weight:900; margin-bottom:30px; cursor:pointer;"><input type="checkbox" id="agree-cb" style="width:24px; height:24px; accent-color:#000;" onchange="updateFinalBtn()"><span>個人情報の取り扱い事項に同意する <small style="font-weight:400;">(Agree to the privacy policy)</small></span></label>
             <div style="display:flex; gap:15px;"><button class="submit-btn" style="background:#eee; color:#000; flex:1;" onclick="hideSurvey()">戻る Back</button><button id="finalPostBtn" class="submit-btn" style="flex:2;" onclick="executeFinalPost()" disabled>POST NOW</button></div>
         </div>
     </div>
@@ -180,7 +177,7 @@
 </div>
 
 <script>
-    const CONFIG = { storageKey: 'egg_mouse_v119_data', settingsKey: 'egg_mouse_v115_set', inactivityLimit: 60000, baseCount: 5, coverMax: 10 };
+    const CONFIG = { storageKey: 'egg_mouse_v120_data', settingsKey: 'egg_mouse_v115_set', inactivityLimit: 60000, baseCount: 5, coverMax: 10 };
     let communityItems = [], inactivityTimer, isSaverActive = false, grabbedItem = null;
     let selectedBase = null, selectedCover = null, validCoverIdsForRandom = [];
     let surveyInput = { age: '', gender: '' }, isSurveyEnabled = true;
@@ -304,7 +301,7 @@
         document.body.classList.add('saver-active'); 
         communityItems.forEach(i => {
             document.getElementById('saver-layer').appendChild(i.el);
-            i.el.style.width = "80px"; i.el.style.height = "104px";
+            i.el.style.width = "80px"; i.el.style.height = "104px"; // 大きく漂う
         }); 
         document.getElementById('saver-guide').style.opacity = 1; document.getElementById('saver-guide').style.pointerEvents = 'auto'; 
     }
@@ -313,20 +310,27 @@
         document.body.classList.remove('saver-active'); 
         communityItems.forEach(i => {
             document.getElementById('community-area').appendChild(i.el);
-            i.el.style.width = "34px"; i.el.style.height = "44px";
+            i.el.style.width = "34px"; i.el.style.height = "44px"; // 小さく戻る
         }); 
         document.getElementById('saver-guide').style.opacity = 0; document.getElementById('saver-guide').style.pointerEvents = 'none'; 
         resetInactivityTimer(); 
     }
     function updatePreview(){ document.getElementById('img-base').src=`image/base_${selectedBase}.png`; const c=document.getElementById('img-cover'); if(selectedCover>0){ c.src=`image/cover_${selectedCover}.png`; c.style.opacity="1"; } else { c.style.opacity="0"; } }
     function loadCommunity(it){ if(it){ for(let i=0; i<5; i++){ if(validCoverIdsForRandom.length) addCommunityItem(Math.floor(Math.random()*5)+1, validCoverIdsForRandom[Math.floor(Math.random()*validCoverIdsForRandom.length)], true); } } }
-    function addCommunityItem(b,c,i){ 
-        const el=document.createElement('div'); el.className='community-item'; if(!i) el.classList.add('new-arrival'); 
+    
+    function addCommunityItem(b,c,isInitial){ 
+        const el=document.createElement('div'); el.className='community-item'; 
+        if(!isInitial) el.classList.add('new-arrival'); 
+        
+        // 修正：初期サイズを常に小(34x44)に強制
+        el.style.width = "34px"; el.style.height = "44px";
+        
         el.innerHTML=`<img src="image/base_${b}.png" style="width:100%;position:absolute;"><img src="image/cover_${c}.png" style="width:100%;position:absolute;opacity:${c===0?0:1}" onerror="this.style.opacity=0">`; 
         const r=Math.random()*360; el.style.setProperty('--base-rot', r+'deg'); 
         const it={el,x:Math.random()*80+5,y:Math.random()*70+5,rot:r,dx:(Math.random()-0.5)*0.06,dy:(Math.random()-0.5)*0.06,dr:0,vx:0,vy:0}; 
         (isSaverActive ? document.getElementById('saver-layer') : document.getElementById('community-area')).appendChild(el); communityItems.push(it);
     }
+
     function downloadCSV(){ const d = JSON.parse(localStorage.getItem(CONFIG.storageKey)||'[]'); const csv = "\ufeffTime,Base,Cover,Age,Gender\n" + d.map(i=>`${i.t},${i.b},${i.c},${i.age},${i.gen}`).join("\n"); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); a.download = `booth_results.csv`; a.click(); }
     function resetData(){ if(confirm("Reset ALL data and Community?")) { localStorage.removeItem(CONFIG.storageKey); communityItems.forEach(i => i.el.remove()); communityItems = []; location.reload(); } }
     init();
