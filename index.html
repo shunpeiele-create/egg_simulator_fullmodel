@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Booth Posting Tool v76</title>
+    <title>Booth Posting Tool v83</title>
     <style>
         :root {
             --primary-bg: #f8f8f8;
@@ -22,7 +22,6 @@
 
         .manual-saver-trigger { position: fixed; top: 0; left: 0; width: 80px; height: 80px; z-index: 10000; cursor: pointer; }
 
-        /* レイアウト */
         .app-grid { display: grid; grid-template-columns: 1.8fr 1.2fr; height: 100vh; width: 100vw; position: relative; }
         .preview-pane { background: #fff; border-right: 1px solid var(--border); position: relative; display: flex; flex-direction: column; overflow: hidden; z-index: 10; height: 100%; }
         .control-pane { background: var(--panel-bg); padding: 60px 50px 40px; display: flex; flex-direction: column; position: relative; z-index: 10; height: 100vh; }
@@ -36,32 +35,34 @@
         .preview-outer { flex: 1; display: flex; justify-content: center; align-items: center; position: relative; }
         .default-img { position: absolute; width: 60%; max-height: 40%; object-fit: contain; z-index: 1; transition: opacity 0.8s ease; }
         
-        /* --- 修正：飛行エフェクトのCSS --- */
-        .preview-wrapper { 
-            position: relative; height: 50%; aspect-ratio: 179 / 232; 
-            display: flex; justify-content: center; align-items: center; 
-            z-index: 2; opacity: 0; transform: translateY(0) scale(1);
-            will-change: transform, opacity;
+        /* 飛行エフェクト */
+        .preview-wrapper { position: relative; height: 50%; aspect-ratio: 179 / 232; display: flex; justify-content: center; align-items: center; z-index: 2; opacity: 0; transform: translateY(0) scale(1); }
+        .preview-wrapper.animate-on { transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55), opacity: 0.4s ease, filter 0.5s ease; }
+        .preview-wrapper.rise { transform: scale(1.15) translateY(-30px); opacity: 1 !important; filter: drop-shadow(0 30px 20px rgba(0,0,0,0.15)); }
+        
+        /* 修正：flyクラスに専用アニメーションを割り当てて「パッ」と消えるのを防ぐ */
+        @keyframes flyOut {
+            0% { transform: scale(1.15) translateY(-30px); opacity: 1; }
+            100% { transform: scale(0.4) translateY(-130vh); opacity: 0; }
         }
-        /* rise（上昇）: ゆったりした動き */
-        .preview-wrapper.rise { 
-            transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.4s ease;
-            transform: scale(1.1) translateY(-40px); 
-            opacity: 1 !important; 
-            filter: drop-shadow(0 30px 20px rgba(0,0,0,0.15));
-        }
-        /* fly（飛行）: JSでtransitionを上書きして加速させる */
-        .preview-wrapper.fly { 
-            transform: translateY(-130vh) scale(0.5) !important; 
-            opacity: 0 !important; 
-        }
+        .preview-wrapper.fly { animation: flyOut 0.8s cubic-bezier(0.5, 0, 1, 0.5) forwards !important; }
 
         .layer { position: absolute; width: 100%; height: 100%; object-fit: contain; transition: 0.4s ease; }
 
-        .alert-text { font-size: 11px; color: var(--alert); text-align: center; margin-bottom: 8px; font-weight: 800; opacity: 0; transition: 0.3s; }
-        .alert-text.show { opacity: 1; }
+        .section { margin-bottom: 25px; }
+        .section.locked { opacity: 0.15; pointer-events: none; }
+        @keyframes unlockBounce { 0%, 100% {transform:translateY(0)} 30% {transform:translateY(-8px)} }
+        .unlocking { animation: unlockBounce 0.5s ease; }
+        .section-label { font-size: 14px; font-weight: 800; color: #000; margin-bottom: 12px; display: block; }
+        .grid-colors { display: flex; gap: 16px; flex-wrap: wrap; }
+        .color-dot { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border); overflow: hidden; background-size: 180%; background-position: center 10%; cursor: pointer; position: relative; }
+        .color-dot.active::after { content: ''; position: absolute; inset: 0; border: 3px solid #000; border-radius: 50%; }
+        .grid-covers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .cover-item { aspect-ratio: 1.25; border: 1px solid var(--border); border-radius: 12px; background: #fff; display: flex; justify-content: center; align-items: center; padding: 10px; cursor: pointer; }
+        .cover-item.active { border: 2.5px solid #000; background: #fafafa; }
+        .cover-thumb { width: 60%; height: 60%; object-fit: contain; }
 
-        .community-area-box { flex: 1; position: relative; overflow: hidden; background: #fcfcfc; border-radius: 20px; border: 1px dashed var(--border); cursor: grab; touch-action: none; z-index: 5; }
+        .community-area-box { flex: 1; position: relative; overflow: hidden; background: #fcfcfc; border-radius: 20px; border: 1px dashed var(--border); cursor: grab; touch-action: none; min-height: 0; z-index: 5; }
         #saver-layer { position: fixed; inset: 0; background: #fff; z-index: 9000; display: none; cursor: grab; }
         body.saver-active #saver-layer { display: block; }
         .community-item { position: absolute; width: 34px; height: 44px; pointer-events: none; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); will-change: left, top, transform; }
@@ -71,11 +72,14 @@
         #saver-guide { position: fixed; bottom: 50px; right: 50px; width: 400px; opacity: 0; transition: 0.5s; z-index: 9500; pointer-events: none; }
         .saver-active #saver-guide { opacity: 1; pointer-events: auto; cursor: pointer; }
 
-        .submit-btn { width: 100%; padding: 22px; background: #000; color: #fff; border: none; border-radius: 20px; font-size: 18px; font-weight: 800; cursor: pointer; display: flex; flex-direction: column; align-items: center; }
+        .alert-text { font-size: 11px; color: var(--alert); text-align: center; margin-bottom: 8px; font-weight: 800; opacity: 0; transition: 0.3s; }
+        .alert-text.show { opacity: 1; }
+        .submit-btn { width: 100%; padding: 22px; background: #000; color: #fff; border: none; border-radius: 20px; font-size: 18px; font-weight: 800; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; }
         .submit-btn:disabled { background: var(--disabled); color: #8e8e93; }
 
         .overlay { position: fixed; inset: 0; background: var(--overlay-dim); z-index: 5000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.4s ease; }
         .overlay.show { display: flex; opacity: 1; }
+
         .survey-card { background: #fff; width: 90%; max-width: 1050px; height: 85%; border-radius: 40px; overflow: hidden; display: grid; grid-template-columns: 1fr 1.2fr; box-shadow: 0 40px 100px rgba(0,0,0,0.3); }
         .survey-preview { background: #f9f9f9; display: flex; justify-content: center; align-items: center; padding: 60px; }
         .survey-form { padding: 40px 50px; display: flex; flex-direction: column; justify-content: center; overflow-y: auto; }
@@ -103,7 +107,7 @@
         <div class="title-area"><img src="title.png" class="title-img" onerror="this.style.opacity=0"></div>
         <div class="preview-outer">
             <img id="img-default" src="image/default.png" class="default-img">
-            <div id="main-preview" class="preview-wrapper">
+            <div id="main-preview" class="preview-wrapper animate-on">
                 <img id="img-base" class="layer">
                 <img id="img-cover" class="layer">
             </div>
@@ -133,7 +137,7 @@
         <div id="btn-container">
             <div id="cover-alert" class="alert-text">カバーを選んでください <small>(Please choose a cover)</small></div>
             <button id="submitBtn" class="submit-btn" onclick="handlePostAction()" disabled>
-                <span>POST NOW</span><small style="font-size:10px; font-weight:400;">投稿する</small>
+                <span>POST NOW</span><small>投稿する</small>
             </button>
         </div>
     </div>
@@ -145,10 +149,19 @@
         <div class="survey-form">
             <h2 style="font-size:32px; font-weight:900; margin-bottom:5px;">This is your EGG MOUSE!</h2>
             <p style="font-size:14px; color:var(--text-sub); margin-bottom:30px;">アンケートにご協力ください（任意）<br>Please help us with our survey (Optional)</p>
-            <div id="age-chips"><span class="section-label">年齢 Age</span><div class="chip" onclick="setSurvey('age','30歳未満')">30歳未満</div><div class="chip" onclick="setSurvey('age','30代')">30代</div><div class="chip" onclick="setSurvey('age','40代')">40代</div><div class="chip" onclick="setSurvey('age','50歳以上')">50歳以上</div><div class="chip" onclick="setSurvey('age','選択しない')">選択しない</div></div>
-            <div id="gender-chips" style="margin-top:20px;"><span class="section-label">性別 Gender</span><div class="chip" onclick="setSurvey('gender','男性')">男性</div><div class="chip" onclick="setSurvey('gender','女性')">女性</div><div class="chip" onclick="setSurvey('gender','選択しない')">選択しない</div></div>
-            <div style="font-size:11px; color:var(--text-sub); line-height:1.5; margin:25px 0 15px; padding:18px; background:#f2f2f7; border-radius:15px;">【個人情報の取り扱い】ご入力いただいた情報は匿名化して集計し、統計データとしてのみ活用いたします。</div>
-            <label style="display:flex; align-items:center; gap:12px; font-weight:700; margin-bottom:30px; cursor:pointer;"><input type="checkbox" id="agree-cb" style="width:24px; height:24px;" onchange="updateFinalBtn()"><span>同意して投稿する Agree and Post</span></label>
+            
+            <div id="age-chips"><span class="section-label">年齢 Age</span><div class="chip" onclick="setSurvey('age','30歳未満')">30歳未満 (Under 30)</div><div class="chip" onclick="setSurvey('age','30代')">30代 (30s)</div><div class="chip" onclick="setSurvey('age','40代')">40代 (40s)</div><div class="chip" onclick="setSurvey('age','50歳以上')">50歳以上 (Over 50)</div><div class="chip" onclick="setSurvey('age','選択しない')">選択しない (N/A)</div></div>
+            <div id="gender-chips" style="margin-top:20px;"><span class="section-label">性別 Gender</span><div class="chip" onclick="setSurvey('gender','男性')">男性 (Male)</div><div class="chip" onclick="setSurvey('gender','女性')">女性 (Female)</div><div class="chip" onclick="setSurvey('gender','選択しない')">選択しない (N/A)</div></div>
+            
+            <div style="font-size:11px; color:var(--text-sub); line-height:1.5; margin:25px 0 15px; padding:18px; background:#f2f2f7; border-radius:15px;">
+                【個人情報の取り扱い】ご入力いただいた情報は匿名化して集計し、統計データとしてのみ活用いたします。特定の個人を識別する目的では使用いたしません。<br>
+                [Privacy Policy] Your data will be anonymized and used only for statistical purposes. We will not use it to identify specific individuals.
+            </div>
+
+            <label style="display:flex; align-items:center; gap:12px; font-weight:700; margin-bottom:30px; cursor:pointer;">
+                <input type="checkbox" id="agree-cb" style="width:24px; height:24px; accent-color:#000;" onchange="updateFinalBtn()">
+                <span>同意して投稿する Agree and Post</span>
+            </label>
             <div style="display:flex; gap:15px;"><button class="submit-btn" style="background:#eee; color:#000; flex:1;" onclick="hideSurvey()">戻る Back</button><button id="finalPostBtn" class="submit-btn" style="flex:2;" onclick="executeFinalPost()" disabled>POST NOW</button></div>
         </div>
     </div>
@@ -160,13 +173,13 @@
         <div style="display:flex; justify-content:space-between; align-items:center; padding:15px 20px; background:#f2f2f7; border-radius:15px; margin-bottom:15px; cursor:pointer;" onclick="toggleSurveySetting()"><span>Survey Form</span><span id="survey-status-label" style="font-weight:900;">ON</span></div>
         <button onclick="downloadCSV()" class="admin-btn">CSV DOWNLOAD</button>
         <button onclick="changePW()" class="admin-btn">CHANGE PASSWORD</button>
-        <button onclick="resetData()" class="admin-btn" style="color:red; border-color:red;">RESET DATA</button>
+        <button onclick="resetData()" class="admin-btn" style="color:red; border-color:red;">RESET ALL DATA</button>
         <button onclick="closeAdmin()" class="admin-btn" style="background:#eee; border:none; margin-top:20px;">CLOSE</button>
     </div>
 </div>
 
 <script>
-    const CONFIG = { storageKey: 'booth_v76_data', settingsKey: 'booth_set_v76', inactivityLimit: 60000, baseCount: 5, coverMax: 10 };
+    const CONFIG = { storageKey: 'booth_v75_data', settingsKey: 'booth_v75_set', inactivityLimit: 60000, baseCount: 5, coverMax: 10 };
     let communityItems = [], inactivityTimer, isSaverActive = false, grabbedItem = null;
     let selectedBase = null, selectedCover = null, validCoverIdsForRandom = [];
     let surveyInput = { age: '', gender: '' }, isSurveyEnabled = true;
@@ -198,37 +211,43 @@
 
     function handlePostAction() { if (isSurveyEnabled) showSurvey(); else executeFinalPost(); }
     
-    // --- 演出修正：加速飛行シーケンス ---
     function executeFinalPost() {
         if (isSurveyEnabled) hideSurvey();
         const p = document.getElementById('main-preview');
         
-        // 1: 上昇開始（rise）
-        p.style.transition = ""; // CSSの初期値を使用
+        // 演出シーケンス：確実に上昇を描画してから飛行させる
         p.classList.remove('rise', 'fly');
-        void p.offsetWidth;
+        void p.offsetWidth; // 強制リフロー
+        
         p.classList.add('rise');
         
-        setTimeout(() => {
-            // 2: 飛行開始（fly）- 遷移を高速・加速設定に上書き
-            p.style.transition = "transform 0.8s cubic-bezier(0.45, 0.05, 0.55, 0.95), opacity 0.4s ease";
-            p.classList.add('fly');
-            
-            // データ保存
-            localStorage.setItem(CONFIG.storageKey, JSON.stringify([...JSON.parse(localStorage.getItem(CONFIG.storageKey)||'[]'), {t:new Date().toLocaleString(), b:selectedBase, c:selectedCover, age:surveyInput.age, gen:surveyInput.gender}]));
-            
-            setTimeout(() => {
-                addCommunityItem(selectedBase, selectedCover, false);
-                const th = document.getElementById('thanks-overlay'); th.style.display = 'flex'; setTimeout(()=>th.classList.add('show'), 10);
-                setTimeout(() => { resetUIState(); th.classList.remove('show'); setTimeout(()=>th.style.display='none',400); }, 1600);
-            }, 600);
-        }, 500); // riseの後にflyへ
+        // 2重のrequestAnimationFrameを使用して、確実に上昇状態で描画を固定してから飛行に移行
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                setTimeout(() => {
+                    p.classList.add('fly');
+                    
+                    // データ保存
+                    const data = JSON.parse(localStorage.getItem(CONFIG.storageKey)||'[]');
+                    data.push({t:new Date().toLocaleString(), b:selectedBase, c:selectedCover, age:surveyInput.age, gen:surveyInput.gender});
+                    localStorage.setItem(CONFIG.storageKey, JSON.stringify(data));
+                    
+                    // 飛行完了頃にCommunity追加とThanks表示
+                    setTimeout(() => {
+                        addCommunityItem(selectedBase, selectedCover, false);
+                        const thanks = document.getElementById('thanks-overlay'); thanks.style.display = 'flex';
+                        setTimeout(() => thanks.classList.add('show'), 10);
+                        setTimeout(() => { resetUIState(); thanks.classList.remove('show'); setTimeout(() => thanks.style.display = 'none', 400); }, 1600);
+                    }, 700);
+                }, 450); // 上昇の「溜め」時間
+            });
+        });
     }
 
     function selectBase(id){
         selectedBase = id; document.getElementById('img-default').style.opacity='0'; 
         const p = document.getElementById('main-preview'); 
-        p.style.opacity='1'; p.style.transition = ""; p.classList.remove('rise', 'fly');
+        p.style.opacity='1'; p.classList.remove('rise', 'fly');
         document.querySelectorAll('.color-dot').forEach((el,idx)=>el.classList.toggle('active', (idx+1)===id));
         const cs = document.getElementById('section-cover'); cs.classList.remove('locked'); triggerBounce(cs);
         document.getElementById('cover-alert').classList.add('show'); updatePreview();
@@ -243,28 +262,33 @@
     function triggerBounce(el){ el.classList.remove('unlocking'); void el.offsetWidth; el.classList.add('unlocking'); }
 
     function resetUIState(){
-        const p = document.getElementById('main-preview'); p.style.transition = ""; p.style.opacity='0'; p.classList.remove('rise','fly');
+        const p = document.getElementById('main-preview'); p.classList.remove('animate-on'); p.style.opacity='0'; p.classList.remove('rise','fly');
         selectedBase=null; selectedCover=null; surveyInput={age:'', gender:''}; document.getElementById('img-default').style.opacity='1';
         document.querySelectorAll('.color-dot, .cover-item, .chip').forEach(el=>el.classList.remove('active')); document.getElementById('agree-cb').checked=false;
         document.getElementById('section-cover').classList.add('locked'); document.getElementById('submitBtn').disabled=true; document.getElementById('cover-alert').classList.remove('show');
+        setTimeout(()=>p.classList.add('animate-on'), 50);
     }
 
     function showSurvey(){
         const target=document.getElementById('survey-clone-target'); target.innerHTML='';
-        const clone=document.getElementById('main-preview').cloneNode(true); 
-        clone.style.opacity='1'; clone.style.transition = "none"; clone.classList.remove('rise','fly');
-        target.appendChild(clone);
-        document.getElementById('survey-overlay').classList.add('show');
+        const clone=document.getElementById('main-preview').cloneNode(true); clone.style.opacity='1'; clone.classList.remove('animate-on','rise','fly'); target.appendChild(clone);
+        const o = document.getElementById('survey-overlay'); o.classList.add('show');
     }
     function hideSurvey(){ document.getElementById('survey-overlay').classList.remove('show'); }
     function setSurvey(k,v){ surveyInput[k]=v; document.querySelectorAll(`#${k}-chips .chip`).forEach(c=>c.classList.toggle('active', c.innerText.includes(v))); }
     function updateFinalBtn(){ document.getElementById('finalPostBtn').disabled = !document.getElementById('agree-cb').checked; }
 
-    function openAdmin(){ const s=JSON.parse(localStorage.getItem(CONFIG.settingsKey)||'{}'); if(prompt("PW")===s.pw) document.getElementById('admin-overlay').classList.add('show'); }
+    function openAdmin(){ 
+        const set = JSON.parse(localStorage.getItem(CONFIG.settingsKey) || '{"pw":"1234"}');
+        if(prompt("Password") === set.pw) document.getElementById('admin-overlay').classList.add('show'); 
+    }
     function closeAdmin(){ document.getElementById('admin-overlay').classList.remove('show'); }
     function toggleSurveySetting(){ isSurveyEnabled=!isSurveyEnabled; const s = JSON.parse(localStorage.getItem(CONFIG.settingsKey)||'{}'); s.survey=isSurveyEnabled; localStorage.setItem(CONFIG.settingsKey, JSON.stringify(s)); updateSurveyUI(); }
     function updateSurveyUI(){ const l=document.getElementById('survey-status-label'); l.innerText=isSurveyEnabled?'ON':'OFF'; l.style.color=isSurveyEnabled?'#34c759':'#8e8e93'; }
-    function changePW(){ const n=prompt("New PW"); if(n){ const s=JSON.parse(localStorage.getItem(CONFIG.settingsKey)||'{}'); s.pw=n; localStorage.setItem(CONFIG.settingsKey, JSON.stringify(s)); alert("Changed"); } }
+    function changePW(){
+        const newPW = prompt("Enter new password");
+        if(newPW){ const s = JSON.parse(localStorage.getItem(CONFIG.settingsKey)||'{}'); s.pw=newPW; localStorage.setItem(CONFIG.settingsKey, JSON.stringify(s)); alert("Password changed."); }
+    }
 
     function onPointerDown(e){
         const targetArea = isSaverActive ? document.getElementById('saver-layer') : document.getElementById('community-area');
