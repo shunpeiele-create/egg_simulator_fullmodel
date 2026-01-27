@@ -2,10 +2,10 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>EGG MOUSE SIMULATOR v123</title>
+    <title>EGG MOUSE SIMULATOR v124</title>
     
     <link rel="apple-touch-icon" href="image/base_1.png">
     
@@ -18,14 +18,24 @@
             --primary-bg: #f8f8f8; --panel-bg: #ffffff; --border: #e5e5ea;
             --text-sub: #8e8e93; --alert: #ff3b30; --disabled: #d1d1d6; --overlay-dim: rgba(0,0,0,0.4);
         }
+        
+        /* 修正：iPadでの長押し選択と画面の揺れを完全に防ぐ */
         * { 
             box-sizing: border-box; 
             -webkit-tap-highlight-color: transparent; 
+            -webkit-user-select: none; /* テキスト選択禁止 */
+            -webkit-touch-callout: none; /* 長押しメニュー禁止 */
             user-select: none; 
             outline: none; 
             font-family: "futura-pt", Futura, "Helvetica Neue", "Source Han Sans JP", "Noto Sans JP", sans-serif;
         }
-        body { margin: 0; padding: 0; background: var(--primary-bg); overflow: hidden; height: 100vh; width: 100vw; }
+        
+        body { 
+            margin: 0; padding: 0; background: var(--primary-bg); 
+            overflow: hidden; /* 画面全体の揺れ防止 */
+            height: 100vh; width: 100vw; 
+            position: fixed; /* iOSバウンス対策の決定打 */
+        }
 
         #global-guard { position: fixed; inset: 0; z-index: 99999; display: none; }
         .manual-saver-trigger { position: fixed; top: 0; left: 0; width: 80px; height: 80px; z-index: 10000; cursor: pointer; }
@@ -56,7 +66,6 @@
 
         .layer { position: absolute; width: 100%; height: 100%; object-fit: contain; transition: 0.4s ease; }
 
-        /* 修正：項目間の隙間を1行分 (40px) 開ける */
         .section { margin-bottom: 40px; transition: opacity 0.4s ease; }
         .section.locked { opacity: 0.15; pointer-events: none; }
         .section-label { font-size: 17px; font-weight: 900; color: #000; margin-bottom: 12px; display: block; letter-spacing: 0.05em; }
@@ -84,6 +93,14 @@
             backface-visibility: hidden;
             transition: width 0.8s, height 0.8s;
         }
+
+        /* 修正：復活の登場エフェクト */
+        @keyframes popInFlash {
+            0% { transform: scale(0) rotate(0deg); filter: brightness(5) blur(10px); opacity: 0; }
+            50% { transform: scale(2.5) rotate(15deg); filter: brightness(2) blur(0px); opacity: 1; }
+            100% { transform: scale(1) rotate(var(--base-rot)); filter: brightness(1); opacity: 1; }
+        }
+        .new-arrival { animation: popInFlash 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important; }
         
         #saver-guide { position: fixed; bottom: 50px; right: 50px; width: 400px; opacity: 0; transition: 0.5s; z-index: 11000; pointer-events: none; cursor: pointer; }
 
@@ -92,8 +109,6 @@
 
         .overlay { position: fixed; inset: 0; background: var(--overlay-dim); z-index: 50000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.4s ease; }
         .overlay.show { display: flex; opacity: 1; }
-        
-        /* 修正：アンケート画面の縦横比をiPadに最適化 (縦幅抑制) */
         .survey-card { background: #fff; width: 88%; max-width: 1200px; height: 72%; border-radius: 40px; overflow: hidden; display: grid; grid-template-columns: 1.1fr 1.2fr; box-shadow: 0 40px 100px rgba(0,0,0,0.3); }
         
         .survey-preview { background: #f9f9f9; display: flex; justify-content: center; align-items: center; padding: 50px; position: relative; overflow: hidden; }
@@ -177,11 +192,13 @@
 </div>
 
 <script>
-    /* JSロジック（物理演算、iPadタッチ制御、ADMIN機能）はv122を完全継承 */
-    const CONFIG = { storageKey: 'egg_mouse_v123_data', settingsKey: 'egg_mouse_v115_set', inactivityLimit: 60000, baseCount: 5, coverMax: 10 };
+    const CONFIG = { storageKey: 'egg_mouse_v124_data', settingsKey: 'egg_mouse_v115_set', inactivityLimit: 60000, baseCount: 5, coverMax: 10 };
     let communityItems = [], inactivityTimer, isSaverActive = false, grabbedItem = null;
     let selectedBase = null, selectedCover = null, validCoverIdsForRandom = [];
     let surveyInput = { age: '', gender: '' }, isSurveyEnabled = true;
+
+    // 画面揺れ防止：ブラウザのデフォルトスクロール挙動を阻止
+    document.addEventListener('touchmove', function(e) { e.preventDefault(); }, { passive: false });
 
     function init() {
         const set = JSON.parse(localStorage.getItem(CONFIG.settingsKey) || '{"survey":true, "pw":"1234"}');
@@ -314,7 +331,10 @@
     function loadCommunity(it){ if(it){ for(let i=0; i<5; i++){ if(validCoverIdsForRandom.length) addCommunityItem(Math.floor(Math.random()*5)+1, validCoverIdsForRandom[Math.floor(Math.random()*validCoverIdsForRandom.length)], true); } } }
     
     function addCommunityItem(b,c,isInitial){ 
-        const el=document.createElement('div'); el.className='community-item'; if(!isInitial) el.classList.add('new-arrival'); 
+        const el=document.createElement('div'); el.className='community-item'; 
+        if(!isInitial) {
+            el.classList.add('new-arrival'); // エフェクト復活
+        }
         el.style.width = "34px"; el.style.height = "44px";
         el.innerHTML=`<img src="image/base_${b}.png" style="width:100%;position:absolute;"><img src="image/cover_${c}.png" style="width:100%;position:absolute;opacity:${c===0?0:1}" onerror="this.style.opacity=0">`; 
         const r=Math.random()*360; el.style.setProperty('--base-rot', r+'deg'); 
