@@ -5,10 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>EGG MOUSE SIMULATOR v129</title>
+    <title>EGG MOUSE SIMULATOR v130</title>
     
     <link rel="apple-touch-icon" href="image/base_1.png">
-    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
@@ -19,19 +18,14 @@
             --text-sub: #8e8e93; --alert: #ff3b30; --disabled: #d1d1d6; --overlay-dim: rgba(0,0,0,0.4);
         }
         * { 
-            box-sizing: border-box; 
-            -webkit-tap-highlight-color: transparent; 
-            -webkit-user-select: none;
-            -webkit-touch-callout: none;
-            user-select: none; 
-            outline: none; 
+            box-sizing: border-box; -webkit-tap-highlight-color: transparent; 
+            -webkit-user-select: none; -webkit-touch-callout: none;
+            user-select: none; outline: none; 
             font-family: "futura-pt", Futura, "Helvetica Neue", "Source Han Sans JP", "Noto Sans JP", sans-serif;
         }
         html, body { 
             margin: 0; padding: 0; background: var(--primary-bg); 
-            overflow: hidden; 
-            height: 100%; width: 100%; 
-            position: fixed;
+            overflow: hidden; height: 100%; width: 100%; position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
         }
 
@@ -72,22 +66,21 @@
         .color-dot { width: 50px; height: 50px; border-radius: 50%; border: 1px solid var(--border); overflow: hidden; background-size: 180%; background-position: center 10%; cursor: pointer; position: relative; }
         .color-dot.active::after { content: ''; position: absolute; inset: 0; border: 3px solid #000; border-radius: 50%; }
         
-        /* 修正：11個を収めるための4列グリッド */
+        /* 4列グリッド (11個対応) */
         .grid-covers { 
             display: grid; 
-            grid-template-columns: repeat(4, 1fr); /* 4列に変更 */
-            gap: 6px; /* 隙間を少し詰める */
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 6px; 
             width: 100%;
         }
         .cover-item { 
             aspect-ratio: 1.1; 
-            border: 1px solid var(--border); border-radius: 10px; /* 角丸を少し小さく */
+            border: 1px solid var(--border); border-radius: 10px;
             background: #fff; display: flex; justify-content: center; align-items: center; 
-            padding: 4px; /* 余白を調整 */
-            cursor: pointer; 
+            padding: 4px; cursor: pointer; 
         }
         .cover-item.active { border: 2.5px solid #000; background: #fafafa; }
-        .cover-thumb { width: 55%; height: 55%; object-fit: contain; } /* 画像比率を少しアップ */
+        .cover-thumb { width: 55%; height: 55%; object-fit: contain; }
 
         .community-area-box { flex: 1; position: relative; overflow: hidden; background: #fcfcfc; border-radius: 20px; border: 1px dashed var(--border); cursor: grab; touch-action: none; z-index: 5; margin-bottom: 25px; min-height: 100px; }
         
@@ -128,6 +121,7 @@
         #thanks-overlay { position: absolute; inset: 0; background: rgba(255,255,255,0.95); display: none; justify-content: center; align-items: center; z-index: 100; flex-direction: column; opacity: 0; transition: opacity 0.4s ease; }
         #thanks-overlay.show { display: flex; opacity: 1; }
         .admin-menu { background: #fff; padding: 40px; border-radius: 30px; width: 500px; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,0.1); }
+        .admin-btn { width: 100%; padding: 18px; margin: 5px 0; border: 1px solid #ddd; background: #fff; font-weight: 900; border-radius: 15px; cursor: pointer; }
     </style>
 </head>
 <body onpointerdown="resetInactivityTimer(event)">
@@ -192,16 +186,16 @@
         <div style="display:flex; justify-content:space-between; align-items:center; padding:15px 20px; background:#f2f2f7; border-radius:15px; margin-bottom:15px; cursor:pointer;" onclick="toggleSurveySetting()">
             <span style="font-weight:900;">Survey Form (アンケート表示)</span><span id="survey-status-label" style="font-weight:900;">ON</span>
         </div>
-        <button onclick="downloadCSV()" style="width:100%; padding:18px; margin:5px 0; border:1px solid #ddd; background:#fff; font-weight:900; border-radius:15px; cursor:pointer;">CSV DOWNLOAD</button>
-        <button onclick="changePW()" style="width:100%; padding:18px; margin:5px 0; border:1px solid #ddd; background:#fff; font-weight:900; border-radius:15px; cursor:pointer;">CHANGE PASSWORD</button>
-        <button onclick="resetData()" style="width:100%; padding:18px; margin:5px 0; border:1px solid red; color:red; background:#fff; font-weight:900; border-radius:15px; cursor:pointer;">RESET ALL DATA</button>
-        <button onclick="closeAdmin()" style="width:100%; padding:18px; margin:15px 0 0; background:#eee; border:none; border-radius:15px; cursor:pointer;">CLOSE</button>
+        <button onclick="downloadCSV()" class="admin-btn">CSV DOWNLOAD</button>
+        <button onclick="changePW()" class="admin-btn">CHANGE PASSWORD</button>
+        <button onclick="resetData()" class="admin-btn" style="color:red; border-color:red;">RESET ALL DATA</button>
+        <button onclick="closeAdmin()" class="admin-btn" style="background:#eee; border:none; margin-top:20px;">CLOSE</button>
     </div>
 </div>
 
 <script>
-    // 修正：カバー最大数を10 (アイテム数11) に変更
-    const CONFIG = { storageKey: 'egg_mouse_v129_data', settingsKey: 'egg_mouse_v115_set', inactivityLimit: 60000, baseCount: 5, coverMax: 10 };
+    // 修正：v130でキーを刷新。これでPWは確実に1234に戻り、アンケートもONになる。
+    const CONFIG = { storageKey: 'egg_mouse_v130_data', settingsKey: 'egg_mouse_v130_set', inactivityLimit: 60000, baseCount: 5, coverMax: 10 };
     let communityItems = [], inactivityTimer, isSaverActive = false, grabbedItem = null;
     let selectedBase = null, selectedCover = null, validCoverIdsForRandom = [];
     let surveyInput = { age: '', gender: '' }, isSurveyEnabled = true;
@@ -209,8 +203,10 @@
     document.addEventListener('touchmove', function(e) { e.preventDefault(); }, { passive: false });
 
     function init() {
+        // キー変更により、初回は必ず初期値（survey:true, pw:1234）が読み込まれる
         const set = JSON.parse(localStorage.getItem(CONFIG.settingsKey) || '{"survey":true, "pw":"1234"}');
         isSurveyEnabled = set.survey; updateSurveyUI();
+        
         const bc = document.getElementById('base-options');
         for(let i=1; i<=CONFIG.baseCount; i++){
             const d = document.createElement('div'); d.className='color-dot'; d.style.backgroundImage=`url(image/base_${i}.png)`; d.onclick=()=>selectBase(i); bc.appendChild(d);
@@ -225,6 +221,15 @@
                 img.onerror=()=>itm.remove();
             }
         }
+        
+        // 修正：4列グリッドロジック
+        const totalCovers = cc.children.length; 
+        let cols = 4; // 基本4列
+        if (totalCovers <= 6) cols = 3; 
+        else if (totalCovers >= 9) cols = 5;
+        // 今回は11個なので4列〜5列の範囲で調整される
+        cc.style.gridTemplateColumns = `repeat(4, 1fr)`;
+
         setTimeout(()=>loadCommunity(true), 1000);
         requestAnimationFrame(updateAnimation);
         resetInactivityTimer();
