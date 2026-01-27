@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Booth Posting Tool v112</title>
+    <title>Booth Posting Tool v113</title>
     <style>
         :root {
             --primary-bg: #f8f8f8; --panel-bg: #ffffff; --border: #e5e5ea;
@@ -18,12 +18,9 @@
         .manual-saver-trigger { position: fixed; top: 0; left: 0; width: 80px; height: 80px; z-index: 10000; cursor: pointer; }
         .admin-trigger { position: absolute; top: 15px; right: 15px; width: 50px; height: 50px; background: none; border: none; cursor: pointer; font-size: 28px; color: #eee; z-index: 15000; display: flex; justify-content: center; align-items: center; }
 
-        /* レイアウト：左2 : 右1 (3分の1) に厳格固定 */
         .app-grid { display: grid; grid-template-columns: 2fr 1fr; height: 100vh; width: 100vw; position: relative; }
         .preview-pane { background: #fff; border-right: 1px solid var(--border); position: relative; display: flex; flex-direction: column; overflow: hidden; z-index: 10; }
-        
-        /* 右パネル：サイズ調整を適用 */
-        .control-pane { background: var(--panel-bg); padding: 45px 30px 25px; display: flex; flex-direction: column; position: relative; z-index: 10; height: 100vh; overflow: hidden; }
+        .control-pane { background: var(--panel-bg); padding: 40px 30px 20px; display: flex; flex-direction: column; position: relative; z-index: 10; height: 100vh; overflow: hidden; }
         
         .ui-part { transition: 0.4s; opacity: 1; }
         .saver-active .ui-part { opacity: 0; pointer-events: none; }
@@ -56,18 +53,19 @@
         @keyframes unlockBounce { 0%, 100% {transform:translateY(0)} 30% {transform:translateY(-10px)} }
         .is-unlocking { animation: unlockBounce 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
-        /* セクション間隔を詰め、サイズを調整 */
-        .section { margin-bottom: 16px; transition: opacity 0.4s ease; }
+        .section { margin-bottom: 20px; transition: opacity 0.4s ease; }
         .section.locked { opacity: 0.15; pointer-events: none; }
         .section-label { font-size: 13px; font-weight: 800; color: #000; margin-bottom: 8px; display: block; }
         
         .grid-colors { display: flex; gap: 12px; flex-wrap: wrap; }
-        .color-dot { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border); overflow: hidden; background-size: 180%; background-position: center 10%; cursor: pointer; position: relative; }
+        .color-dot { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--border); overflow: hidden; background-size: 180%; background-position: center 10%; cursor: pointer; position: relative; }
         .color-dot.active::after { content: ''; position: absolute; inset: 0; border: 3px solid #000; border-radius: 50%; }
         
+        /* 修正：カバーアイテムのサイズを半分（コンパクト）に */
         .grid-covers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-        .cover-item { aspect-ratio: 1.2; border: 1px solid var(--border); border-radius: 12px; background: #fff; display: flex; justify-content: center; align-items: center; padding: 6px; cursor: pointer; }
-        .cover-item.active { border: 2.2px solid #000; background: #fafafa; }
+        .cover-item { aspect-ratio: 1.1; border: 1px solid var(--border); border-radius: 10px; background: #fff; display: flex; justify-content: center; align-items: center; padding: 5px; cursor: pointer; }
+        .cover-item.active { border: 2px solid #000; background: #fafafa; }
+        .cover-thumb { width: 50%; height: 50%; object-fit: contain; }
 
         .community-area-box { flex: 1; position: relative; overflow: hidden; background: #fcfcfc; border-radius: 20px; border: 1px dashed var(--border); cursor: grab; touch-action: none; z-index: 5; min-height: 100px; }
         #saver-layer { position: fixed; inset: 0; background: #fff; z-index: 9000; display: none; cursor: grab; }
@@ -179,7 +177,7 @@
         const cc = document.getElementById('cover-options');
         for(let i=0; i<=CONFIG.coverMax; i++){
             const itm = document.createElement('div'); itm.className='cover-item';
-            if(i===0){ itm.innerHTML=`<span style="font-weight:900;font-size:11px;text-align:center;">REMOVE<br>COVER</span>`; itm.onclick=()=>selectCover(i); cc.appendChild(itm); }
+            if(i===0){ itm.innerHTML=`<span style="font-weight:900;font-size:10px;text-align:center;">REMOVE<br>COVER</span>`; itm.onclick=()=>selectCover(i); cc.appendChild(itm); }
             else {
                 const img = new Image(); img.src=`image/cover_${i}.png`; img.className='cover-thumb';
                 img.onload=()=>{ itm.appendChild(img); itm.onclick=()=>selectCover(i); cc.appendChild(itm); validCoverIdsForRandom.push(i); };
@@ -305,7 +303,7 @@
         (isSaverActive ? document.getElementById('saver-layer') : document.getElementById('community-area')).appendChild(el); communityItems.push(it);
     }
     function downloadCSV(){ const d = JSON.parse(localStorage.getItem(CONFIG.storageKey)||'[]'); const csv = "\ufeffTime,Base,Cover,Age,Gender\n" + d.map(i=>`${i.t},${i.b},${i.c},${i.age},${i.gen}`).join("\n"); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); a.download = `booth_results.csv`; a.click(); }
-    function resetData(){ if(confirm("Reset ALL data and Community?")) { localStorage.removeItem(CONFIG.storageKey); communityItems.forEach(i => i.el.remove()); communityItems = []; location.reload(); } }
+    function resetData(){ if(confirm("Reset ALL data?")) { localStorage.removeItem(CONFIG.storageKey); communityItems.forEach(i => i.el.remove()); communityItems = []; location.reload(); } }
     init();
 </script>
 </body>
