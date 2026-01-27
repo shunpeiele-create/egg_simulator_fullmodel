@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>EGG MOUSE SIMULATOR v117</title>
+    <title>EGG MOUSE SIMULATOR v118</title>
     
     <link rel="apple-touch-icon" href="image/base_1.png">
     
@@ -14,7 +14,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
 
     <style>
-        /* (以下、v116の完璧なスタイルを維持) */
         :root {
             --primary-bg: #f8f8f8; --panel-bg: #ffffff; --border: #e5e5ea;
             --text-sub: #8e8e93; --alert: #ff3b30; --disabled: #d1d1d6; --overlay-dim: rgba(0,0,0,0.4);
@@ -27,20 +26,26 @@
             font-family: "futura-pt", Futura, "Helvetica Neue", "Source Han Sans JP", "Noto Sans JP", sans-serif;
         }
         body { margin: 0; padding: 0; background: var(--primary-bg); overflow: hidden; height: 100vh; width: 100vw; }
+
         #global-guard { position: fixed; inset: 0; z-index: 99999; display: none; }
         .manual-saver-trigger { position: fixed; top: 0; left: 0; width: 80px; height: 80px; z-index: 10000; cursor: pointer; }
         .admin-trigger { position: absolute; top: 15px; right: 15px; width: 50px; height: 50px; background: none; border: none; cursor: pointer; font-size: 28px; color: #eee; z-index: 15000; display: flex; justify-content: center; align-items: center; }
+
         .app-grid { display: grid; grid-template-columns: 2fr 1fr; height: 100vh; width: 100vw; position: relative; }
         .preview-pane { background: #fff; border-right: 1px solid var(--border); position: relative; display: flex; flex-direction: column; overflow: hidden; z-index: 10; }
         .control-pane { background: var(--panel-bg); padding: 40px 30px 20px; display: flex; flex-direction: column; position: relative; z-index: 10; height: 100vh; overflow: hidden; }
+        
         .ui-part { transition: 0.4s; opacity: 1; }
         .saver-active .ui-part { opacity: 0; pointer-events: none; }
+
         .title-area { position: absolute; top: 60px; left: 0; width: 100%; height: 60px; display: flex; justify-content: center; z-index: 20; pointer-events: none; }
         .preview-outer { flex: 1; display: flex; justify-content: center; align-items: center; position: relative; width: 100%; height: 100%; }
         .default-img { position: absolute; width: 60%; max-height: 40%; object-fit: contain; z-index: 1; transition: opacity 0.8s ease; }
+        
         .preview-wrapper { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1); height: 55%; aspect-ratio: 179 / 232; display: flex; justify-content: center; align-items: center; z-index: 2; opacity: 0; }
         .preview-wrapper.animate-on { transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55), opacity: 0.4s ease; }
         .preview-wrapper.rise { transform: translate(-50%, -65%) scale(1.15); opacity: 1 !important; filter: drop-shadow(0 30px 20px rgba(0,0,0,0.15)); }
+
         @keyframes snapLaunch {
             0% { transform: translate(-50%, -65%) scale(1.15); opacity: 1; }
             15% { transform: translate(-50%, -45%) scale(1.0); opacity: 1; }
@@ -48,43 +53,58 @@
             100% { transform: translate(-50%, -200vh) scale(0.2); opacity: 0; }
         }
         .preview-wrapper.fly { animation: snapLaunch 1.1s cubic-bezier(0.45, 0, 0.55, 1) forwards !important; }
+
         .layer { position: absolute; width: 100%; height: 100%; object-fit: contain; transition: 0.4s ease; }
-        @keyframes popInFlash {
-            0% { transform: scale(0) rotate(0deg); filter: brightness(5); opacity: 0; }
-            100% { transform: scale(1) rotate(var(--base-rot)); filter: brightness(1); opacity: 1; }
-        }
-        .new-arrival { animation: popInFlash 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important; }
-        @keyframes unlockBounce { 0%, 100% {transform:translateY(0)} 30% {transform:translateY(-10px)} }
-        .is-unlocking { animation: unlockBounce 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
         .section { margin-bottom: 20px; transition: opacity 0.4s ease; }
         .section.locked { opacity: 0.15; pointer-events: none; }
         .section-label { font-size: 13px; font-weight: 900; color: #000; margin-bottom: 10px; display: block; letter-spacing: 0.05em; }
+        
         .grid-colors { display: flex; gap: 14px; flex-wrap: wrap; }
         .color-dot { width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--border); overflow: hidden; background-size: 180%; background-position: center 10%; cursor: pointer; position: relative; }
         .color-dot.active::after { content: ''; position: absolute; inset: 0; border: 3px solid #000; border-radius: 50%; }
+        
         .grid-covers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
         .cover-item { aspect-ratio: 1.1; border: 1px solid var(--border); border-radius: 10px; background: #fff; display: flex; justify-content: center; align-items: center; padding: 5px; cursor: pointer; }
         .cover-item.active { border: 2px solid #000; background: #fafafa; }
         .cover-thumb { width: 50%; height: 50%; object-fit: contain; }
+
         .community-area-box { flex: 1; position: relative; overflow: hidden; background: #fcfcfc; border-radius: 20px; border: 1px dashed var(--border); cursor: grab; touch-action: none; z-index: 5; min-height: 100px; }
+        
+        /* 修正：セーバー画面のアイテムを大きくし、残像防止策を適用 */
         #saver-layer { position: fixed; inset: 0; background: #fff; z-index: 9000; display: none; cursor: grab; touch-action: none; }
         body.saver-active #saver-layer { display: block; }
-        .community-item { position: absolute; width: 34px; height: 44px; pointer-events: none; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
+        
+        .community-item { 
+            position: absolute; 
+            width: 50px; height: 65px; /* サイズアップ */
+            pointer-events: none; 
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); 
+            will-change: left, top, transform;
+            backface-visibility: hidden; /* 残像防止 */
+        }
+        
         #saver-guide { position: fixed; bottom: 50px; right: 50px; width: 400px; opacity: 0; transition: 0.5s; z-index: 11000; pointer-events: none; cursor: pointer; }
-        .submit-btn { width: 100%; padding: 20px; background: #000; color: #fff; border: none; border-radius: 20px; font-size: 19px; font-weight: 900; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); letter-spacing: 0.08em; }
-        .submit-btn small { font-size: 11px; font-weight: 700; letter-spacing: 0; }
+
+        .submit-btn { width: 100%; padding: 20px; background: #000; color: #fff; border: none; border-radius: 20px; font-size: 19px; font-weight: 900; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; letter-spacing: 0.08em; }
         .submit-btn:disabled { background: var(--disabled); color: #8e8e93; }
+
         .overlay { position: fixed; inset: 0; background: var(--overlay-dim); z-index: 50000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.4s ease; }
         .overlay.show { display: flex; opacity: 1; }
         .survey-card { background: #fff; width: 90%; max-width: 1050px; height: 85%; border-radius: 40px; overflow: hidden; display: grid; grid-template-columns: 1fr 1.2fr; box-shadow: 0 40px 100px rgba(0,0,0,0.3); }
-        .survey-preview { background: #f9f9f9; display: flex; justify-content: center; align-items: center; padding: 60px; position: relative; }
+        
+        /* 修正：アンケート内の製品プレビュー。はみ出さないサイズ(65%) */
+        .survey-preview { background: #f9f9f9; display: flex; justify-content: center; align-items: center; padding: 60px; position: relative; overflow: hidden; }
+        .survey-preview .preview-wrapper { height: 65%; width: 65%; max-height: 65%; max-width: 65%; opacity: 1 !important; }
+
         .survey-form { padding: 40px 50px; display: flex; flex-direction: column; justify-content: center; overflow-y: auto; }
         .chip { padding: 14px 20px; border: 1px solid var(--border); border-radius: 12px; background: #fff; font-weight: 700; cursor: pointer; font-size: 13px; margin: 0 8px 8px 0; display: inline-block; }
         .chip.active { background: #000; color: #fff; }
+
         #thanks-overlay { position: absolute; inset: 0; background: rgba(255,255,255,0.95); display: none; justify-content: center; align-items: center; z-index: 100; flex-direction: column; opacity: 0; transition: opacity 0.4s ease; }
         #thanks-overlay.show { display: flex; opacity: 1; }
         .admin-menu { background: #fff; padding: 40px; border-radius: 30px; width: 500px; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,0.1); }
-        .admin-btn { width: 100%; padding: 18px; margin: 5px 0; border: 1px solid #ddd; background: #fff; font-weight: 900; border-radius: 15px; cursor: pointer; font-family: "futura-pt", sans-serif; }
+        .admin-btn { width: 100%; padding: 18px; margin: 5px 0; border: 1px solid #ddd; background: #fff; font-weight: 900; border-radius: 15px; cursor: pointer; }
     </style>
 </head>
 <body onpointerdown="resetInactivityTimer(event)">
@@ -122,7 +142,7 @@
         </div>
         <div id="btn-container">
             <div id="cover-alert" class="alert-text" style="font-weight:900;">Please choose a cover <small style="font-weight:700;">(カバーを選んでください)</small></div>
-            <button id="submitBtn" class="submit-btn" onclick="handlePostAction()" disabled><span>POST NOW</span><small>投稿する</small></button>
+            <button id="submitBtn" class="submit-btn" onclick="handlePostAction()" disabled><span>POST NOW</span><small style="font-weight:400; font-size:11px;">投稿する</small></button>
         </div>
     </div>
 </div>
@@ -156,8 +176,7 @@
 </div>
 
 <script>
-    /* JSロジック（物理演算、iPadタッチ制御、ADMIN機能）はv116を1文字も変えずに完全継承 */
-    const CONFIG = { storageKey: 'egg_mouse_v115_data', settingsKey: 'egg_mouse_v115_set', inactivityLimit: 60000, baseCount: 5, coverMax: 10 };
+    const CONFIG = { storageKey: 'egg_mouse_v118_data', settingsKey: 'egg_mouse_v115_set', inactivityLimit: 60000, baseCount: 5, coverMax: 10 };
     let communityItems = [], inactivityTimer, isSaverActive = false, grabbedItem = null;
     let selectedBase = null, selectedCover = null, validCoverIdsForRandom = [];
     let surveyInput = { age: '', gender: '' }, isSurveyEnabled = true;
@@ -182,6 +201,7 @@
         setTimeout(()=>loadCommunity(true), 1000);
         requestAnimationFrame(updateAnimation);
         resetInactivityTimer();
+        
         const touchTargets = [document.getElementById('community-area'), document.getElementById('saver-layer')];
         touchTargets.forEach(t => { t.addEventListener('pointerdown', onPointerDown, { passive: false }); });
         window.addEventListener('pointermove', onPointerMove, { passive: false });
@@ -230,7 +250,9 @@
 
     function showSurvey(){
         const target=document.getElementById('survey-clone-target'); target.innerHTML='';
-        const clone=document.getElementById('main-preview').cloneNode(true); clone.style.opacity='1'; clone.classList.remove('animate-on','rise','fly');
+        const clone=document.getElementById('main-preview').cloneNode(true); 
+        clone.style.opacity='1';
+        clone.classList.remove('animate-on','rise','fly');
         clone.style.top = "50%"; clone.style.left = "50%"; clone.style.transform = "translate(-50%, -50%) scale(1)";
         target.appendChild(clone);
         document.getElementById('agree-cb').checked = false; document.getElementById('finalPostBtn').disabled = true;
@@ -252,11 +274,11 @@
     function updateSurveyUI(){ const l=document.getElementById('survey-status-label'); l.innerText=isSurveyEnabled?'ON':'OFF'; l.style.color=isSurveyEnabled?'#34c759':'#8e8e93'; }
     function changePW(){ const n=prompt("New PW"); if(n){ const s = JSON.parse(localStorage.getItem(CONFIG.settingsKey)||'{}'); s.pw=n; localStorage.setItem(CONFIG.settingsKey, JSON.stringify(s)); alert("Changed"); } }
 
-    function onPointerDown(e){ if(e.cancelable) e.preventDefault(); const target = isSaverActive ? document.getElementById('saver-layer') : document.getElementById('community-area'); const rect = target.getBoundingClientRect(); const tx = ((e.clientX - rect.left) / rect.width) * 100, ty = ((e.clientY - rect.top) / rect.height) * 100; let found = null; communityItems.forEach(i=>{ const hr = isSaverActive ? 4.5 : 3.5; if(Math.sqrt((tx-i.x)**2+(ty-i.y)**2) < hr) found=i; }); if(found){ grabbedItem=found; grabbedItem.vx=0; grabbedItem.vy=0; } else { communityItems.forEach(i=>{ const dx=i.x-tx, dy=i.y-ty, d=Math.sqrt(dx*dx+dy*dy), r=isSaverActive?20:15; if(d < r){ i.vx+=(dx/d)*(r-d)*0.6; i.vy+=(dy/d)*(r-d)*0.6; i.dr+=(Math.random()-0.5)*10; } }); } }
+    function onPointerDown(e){ if(e.cancelable) e.preventDefault(); const target = isSaverActive ? document.getElementById('saver-layer') : document.getElementById('community-area'); const rect = target.getBoundingClientRect(); const tx = ((e.clientX - rect.left) / rect.width) * 100, ty = ((e.clientY - rect.top) / rect.height) * 100; let found = null; communityItems.forEach(i=>{ const hr = isSaverActive ? 6.5 : 4.5; if(Math.sqrt((tx-i.x)**2+(ty-i.y)**2) < hr) found=i; }); if(found){ grabbedItem=found; grabbedItem.vx=0; grabbedItem.vy=0; } else { communityItems.forEach(i=>{ const dx=i.x-tx, dy=i.y-ty, d=Math.sqrt(dx*dx+dy*dy), r=isSaverActive?20:15; if(d < r){ i.vx+=(dx/d)*(r-d)*0.6; i.vy+=(dy/d)*(r-d)*0.6; i.dr+=(Math.random()-0.5)*10; } }); } }
     function onPointerMove(e){ if(!grabbedItem)return; if(e.cancelable) e.preventDefault(); const target = isSaverActive ? document.getElementById('saver-layer') : document.getElementById('community-area'); const rect = target.getBoundingClientRect(); const tx=((e.clientX-rect.left)/rect.width)*100, ty=((e.clientY-rect.top)/rect.height)*100; grabbedItem.vx = (tx - grabbedItem.x) * 0.85; grabbedItem.vy = (ty - grabbedItem.y) * 0.85; grabbedItem.x = tx; grabbedItem.y = ty; }
 
     function updateAnimation(){
-        const lx=isSaverActive?94:92, ly=isSaverActive?92:82, md=isSaverActive?10:7; 
+        const lx=isSaverActive?92:90, ly=isSaverActive?90:80, md=isSaverActive?12:9; 
         for(let i=0; i<communityItems.length; i++){
             for(let j=i+1; j<communityItems.length; j++){
                 const a=communityItems[i], b=communityItems[j]; if(a===grabbedItem||b===grabbedItem)continue;
@@ -269,16 +291,34 @@
                 i.x+=(i.dx+i.vx); i.y+=(i.dy+i.vy); i.rot+=i.dr; i.vx*=0.975; i.vy*=0.975; i.dr*=0.96; 
                 if(i.x < 0){ i.x=0; i.dx=Math.abs(i.dx); i.vx*=-0.8; } else if(i.x > lx){ i.x=lx; i.dx=-Math.abs(i.dx); i.vx*=-0.8; }
                 if(i.y < 0){ i.y=0; i.dy=Math.abs(i.dy); i.vy*=-0.8; } else if(i.y > ly){ i.y=ly; i.dy=-Math.abs(i.dy); i.vy*=-0.8; }
-                if(isNaN(i.x)){ i.x=Math.random()*80; i.vx=0; }
             }
-            i.el.style.left = i.x + '%'; i.el.style.top = i.y + '%'; i.el.style.transform = `rotate(${i.rot}deg)`;
+            i.el.style.left = i.x + '%'; i.el.style.top = i.y + '%'; i.el.style.transform = `rotate(${i.rot}deg) translateZ(0)`;
         });
         requestAnimationFrame(updateAnimation);
     }
 
     function resetInactivityTimer(){ clearTimeout(inactivityTimer); inactivityTimer=setTimeout(()=>startSaver(), CONFIG.inactivityLimit); }
-    function startSaver(){ if(isSaverActive)return; isSaverActive=true; document.body.classList.add('saver-active'); communityItems.forEach(i => document.getElementById('saver-layer').appendChild(i.el)); document.getElementById('saver-guide').style.opacity = 1; document.getElementById('saver-guide').style.pointerEvents = 'auto'; }
-    function stopSaver(e){ if(e) e.stopPropagation(); isSaverActive = false; document.body.classList.remove('saver-active'); communityItems.forEach(i => document.getElementById('community-area').appendChild(i.el)); document.getElementById('saver-guide').style.opacity = 0; document.getElementById('saver-guide').style.pointerEvents = 'none'; resetInactivityTimer(); }
+    function startSaver(){ 
+        if(isSaverActive)return; isSaverActive=true; 
+        document.body.classList.add('saver-active'); 
+        communityItems.forEach(i => {
+            document.getElementById('saver-layer').appendChild(i.el);
+            i.el.style.width = "80px"; i.el.style.height = "104px"; // セーバー中は大きく
+        }); 
+        document.getElementById('saver-guide').style.opacity = 1; 
+        document.getElementById('saver-guide').style.pointerEvents = 'auto'; 
+    }
+    function stopSaver(e){ 
+        if(e) e.stopPropagation(); isSaverActive = false; 
+        document.body.classList.remove('saver-active'); 
+        communityItems.forEach(i => {
+            document.getElementById('community-area').appendChild(i.el);
+            i.el.style.width = "34px"; i.el.style.height = "44px"; // 通常時は戻す
+        }); 
+        document.getElementById('saver-guide').style.opacity = 0; 
+        document.getElementById('saver-guide').style.pointerEvents = 'none'; 
+        resetInactivityTimer(); 
+    }
     function updatePreview(){ document.getElementById('img-base').src=`image/base_${selectedBase}.png`; const c=document.getElementById('img-cover'); if(selectedCover>0){ c.src=`image/cover_${selectedCover}.png`; c.style.opacity="1"; } else { c.style.opacity="0"; } }
     function loadCommunity(it){ if(it){ for(let i=0; i<5; i++){ if(validCoverIdsForRandom.length) addCommunityItem(Math.floor(Math.random()*5)+1, validCoverIdsForRandom[Math.floor(Math.random()*validCoverIdsForRandom.length)], true); } } }
     function addCommunityItem(b,c,i){ 
