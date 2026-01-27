@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Booth Posting Tool v111</title>
+    <title>Booth Posting Tool v113</title>
     <style>
         :root {
             --primary-bg: #f8f8f8; --panel-bg: #ffffff; --border: #e5e5ea;
@@ -18,21 +18,16 @@
         .manual-saver-trigger { position: fixed; top: 0; left: 0; width: 80px; height: 80px; z-index: 10000; cursor: pointer; }
         .admin-trigger { position: absolute; top: 15px; right: 15px; width: 50px; height: 50px; background: none; border: none; cursor: pointer; font-size: 28px; color: #eee; z-index: 15000; display: flex; justify-content: center; align-items: center; }
 
-        /* レイアウト：左2 : 右1 (3分の1) に厳格固定 */
         .app-grid { display: grid; grid-template-columns: 2fr 1fr; height: 100vh; width: 100vw; position: relative; }
         .preview-pane { background: #fff; border-right: 1px solid var(--border); position: relative; display: flex; flex-direction: column; overflow: hidden; z-index: 10; }
         
-        /* 右パネル：幅を3分の1に制限 */
         .control-pane { background: var(--panel-bg); padding: 40px 30px 20px; display: flex; flex-direction: column; position: relative; z-index: 10; height: 100vh; overflow: hidden; }
-        
-        .ui-part { transition: 0.4s; opacity: 1; }
-        .saver-active .ui-part { opacity: 0; pointer-events: none; }
+        .scrollable-content { flex: 1; overflow-y: auto; padding-right: 5px; margin-bottom: 10px; display: flex; flex-direction: column; }
 
         .title-area { position: absolute; top: 50px; left: 0; width: 100%; height: 60px; display: flex; justify-content: center; z-index: 20; pointer-events: none; }
         .preview-outer { flex: 1; display: flex; justify-content: center; align-items: center; position: relative; width: 100%; height: 100%; }
         .default-img { position: absolute; width: 60%; max-height: 45%; object-fit: contain; z-index: 1; transition: opacity 0.8s ease; }
         
-        /* シミュレーション画像中央固定 */
         .preview-wrapper { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1); height: 55%; aspect-ratio: 179 / 232; display: flex; justify-content: center; align-items: center; z-index: 2; opacity: 0; }
         .preview-wrapper.animate-on { transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55), opacity: 0.4s ease, filter 0.5s ease; }
         .preview-wrapper.rise { transform: translate(-50%, -65%) scale(1.15); opacity: 1 !important; filter: drop-shadow(0 30px 20px rgba(0,0,0,0.15)); }
@@ -61,14 +56,14 @@
         .section.locked { opacity: 0.15; pointer-events: none; }
         .section-label { font-size: 13px; font-weight: 800; color: #000; margin-bottom: 8px; display: block; }
         
-        /* 操作エリアのパーツサイズ調整 */
         .grid-colors { display: flex; gap: 10px; flex-wrap: wrap; }
         .color-dot { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--border); overflow: hidden; background-size: 180%; background-position: center 10%; cursor: pointer; position: relative; }
         .color-dot.active::after { content: ''; position: absolute; inset: 0; border: 3px solid #000; border-radius: 50%; }
         
         .grid-covers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-        .cover-item { aspect-ratio: 1.2; border: 1px solid var(--border); border-radius: 10px; background: #fff; display: flex; justify-content: center; align-items: center; padding: 6px; cursor: pointer; }
+        .cover-item { aspect-ratio: 1.2; border: 1px solid var(--border); border-radius: 10px; background: #fff; display: flex; justify-content: center; align-items: center; padding: 6px; cursor: pointer; transition: 0.2s; }
         .cover-item.active { border: 2px solid #000; background: #fafafa; }
+        .cover-item img { max-width: 90%; max-height: 90%; object-fit: contain; }
 
         .community-area-box { flex: 1; position: relative; overflow: hidden; background: #fcfcfc; border-radius: 15px; border: 1px dashed var(--border); cursor: grab; touch-action: none; z-index: 5; min-height: 80px; }
         #saver-layer { position: fixed; inset: 0; background: #fff; z-index: 9000; display: none; cursor: grab; }
@@ -80,8 +75,12 @@
 
         .overlay { position: fixed; inset: 0; background: var(--overlay-dim); z-index: 50000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.4s ease; }
         .overlay.show { display: flex; opacity: 1; }
-        .survey-card { background: #fff; width: 90%; max-width: 1050px; height: 85%; border-radius: 40px; overflow: hidden; display: grid; grid-template-columns: 1fr 1.2fr; }
-        .survey-preview { background: #f9f9f9; display: flex; justify-content: center; align-items: center; padding: 60px; position: relative; }
+        .survey-card { background: #fff; width: 90%; max-width: 1050px; height: 85%; border-radius: 40px; overflow: hidden; display: grid; grid-template-columns: 1fr 1.2fr; box-shadow: 0 40px 100px rgba(0,0,0,0.3); }
+        
+        /* 修正：アンケート内のプレビュー。高さとはみ出しを制限 */
+        .survey-preview { background: #f9f9f9; display: flex; justify-content: center; align-items: center; padding: 40px; position: relative; overflow: hidden; }
+        .survey-preview .preview-wrapper { height: 80%; width: 80%; max-height: 80%; max-width: 80%; }
+
         .survey-form { padding: 40px 50px; display: flex; flex-direction: column; justify-content: center; overflow-y: auto; }
         .chip { padding: 12px 16px; border: 1px solid var(--border); border-radius: 10px; background: #fff; font-weight: 600; cursor: pointer; font-size: 12px; margin: 0 6px 6px 0; display: inline-block; }
         .chip.active { background: #000; color: #fff; }
@@ -89,7 +88,7 @@
         #thanks-overlay { position: absolute; inset: 0; background: rgba(255,255,255,0.95); display: none; justify-content: center; align-items: center; z-index: 100; flex-direction: column; opacity: 0; transition: opacity 0.4s ease; }
         #thanks-overlay.show { display: flex; opacity: 1; }
         
-        .admin-menu { background: #fff; padding: 40px; border-radius: 30px; width: 500px; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,0.1); }
+        .admin-menu { background: #fff; padding: 40px; border-radius: 30px; width: 500px; text-align: center; }
         .admin-btn { width: 100%; padding: 16px; margin: 5px 0; border: 1px solid #ddd; background: #fff; font-weight: 700; border-radius: 15px; cursor: pointer; }
     </style>
 </head>
@@ -120,10 +119,11 @@
         </div>
     </div>
     <div class="control-pane ui-part">
-        <div style="flex:1; display:flex; flex-direction:column; min-height:0;">
-            <section class="section" id="section-base"><span class="section-label">01. SELECT BODY COLOR <small>(本体色を選択してください)</small></span><div class="grid-colors" id="base-options"></div></section>
-            <section class="section locked" id="section-cover"><span class="section-label">02. CHOOSE COVER <small>(カバーを選択してください)</small></span><div class="grid-covers" id="cover-options"></div></section>
-            <span class="section-label">COMMUNITY <small>(みんなのEGG MOUSE)</small></span><div id="community-area" class="community-area-box"></div>
+        <div class="scrollable-content">
+            <section class="section" id="section-base"><span class="section-label">01. SELECT BODY COLOR  <small>(本体色を選択してください)</small></span><div class="grid-colors" id="base-options"></div></section>
+            <section class="section locked" id="section-cover"><span class="section-label">02. CHOOSE COVER  <small>(カバーを選択してください)</small></span><div class="grid-covers" id="cover-options"></div></section>
+            <span class="section-label">COMMUNITY <small>(みんなのEGG MOUSE)</small></span>
+            <div id="community-area" class="community-area-box"></div>
             <div style="font-size:9px; color:var(--text-sub); text-align:right; margin-top:5px; font-weight:600;">Latest 20 posts <small>(最新の20件)</small></div>
         </div>
         <div id="btn-container">
@@ -152,7 +152,7 @@
     <div class="admin-menu">
         <h2 style="margin-bottom:25px">ADMIN SETTINGS</h2>
         <div style="display:flex; justify-content:space-between; align-items:center; padding:15px 20px; background:#f2f2f7; border-radius:15px; margin-bottom:15px; cursor:pointer;" onclick="toggleSurveySetting()">
-            <span>Survey Form</span><span id="survey-status-label" style="font-weight:900;">ON</span>
+            <span>Survey Form (アンケート表示)</span><span id="survey-status-label" style="font-weight:900;">ON</span>
         </div>
         <button onclick="downloadCSV()" class="admin-btn">CSV DOWNLOAD</button>
         <button onclick="changePW()" class="admin-btn">CHANGE PASSWORD</button>
@@ -162,7 +162,7 @@
 </div>
 
 <script>
-    const CONFIG = { storageKey: 'booth_v111_data', settingsKey: 'booth_v111_set', inactivityLimit: 60000, baseCount: 5, coverMax: 10 };
+    const CONFIG = { storageKey: 'booth_v113_data', settingsKey: 'booth_v113_set', inactivityLimit: 60000, baseCount: 5, coverMax: 15 };
     let communityItems = [], inactivityTimer, isSaverActive = false, grabbedItem = null;
     let selectedBase = null, selectedCover = null, validCoverIdsForRandom = [];
     let surveyInput = { age: '', gender: '' }, isSurveyEnabled = true;
@@ -179,7 +179,7 @@
             const itm = document.createElement('div'); itm.className='cover-item';
             if(i===0){ itm.innerHTML=`<span style="font-weight:900;font-size:10px;text-align:center;">REMOVE<br>COVER</span>`; itm.onclick=()=>selectCover(i); cc.appendChild(itm); }
             else {
-                const img = new Image(); img.src=`image/cover_${i}.png`; img.className='cover-thumb';
+                const img = new Image(); img.src=`image/cover_${i}.png`; 
                 img.onload=()=>{ itm.appendChild(img); itm.onclick=()=>selectCover(i); cc.appendChild(itm); validCoverIdsForRandom.push(i); };
                 img.onerror=()=>itm.remove();
             }
@@ -233,8 +233,9 @@
 
     function showSurvey(){
         const target=document.getElementById('survey-clone-target'); target.innerHTML='';
-        const clone=document.getElementById('main-preview').cloneNode(true); clone.style.opacity='1'; clone.classList.remove('animate-on','rise','fly');
-        clone.style.top = "50%"; clone.style.left = "50%"; clone.style.transform = "translate(-50%, -50%) scale(1.2)";
+        const clone=document.getElementById('main-preview').cloneNode(true); 
+        clone.style.opacity='1'; 
+        clone.classList.remove('animate-on','rise','fly');
         target.appendChild(clone);
         document.getElementById('agree-cb').checked = false; document.getElementById('finalPostBtn').disabled = true;
         surveyInput = { age: '', gender: '' }; document.querySelectorAll('#survey-overlay .chip').forEach(c => c.classList.remove('active'));
