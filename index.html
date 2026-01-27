@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Booth Posting Tool v113</title>
+    <title>Booth Posting Tool v114</title>
     <style>
         :root {
             --primary-bg: #f8f8f8; --panel-bg: #ffffff; --border: #e5e5ea;
@@ -55,21 +55,24 @@
 
         .section { margin-bottom: 20px; transition: opacity 0.4s ease; }
         .section.locked { opacity: 0.15; pointer-events: none; }
-        .section-label { font-size: 13px; font-weight: 800; color: #000; margin-bottom: 8px; display: block; }
+        .section-label { font-size: 13px; font-weight: 800; color: #000; margin-bottom: 10px; display: block; }
         
-        .grid-colors { display: flex; gap: 12px; flex-wrap: wrap; }
-        .color-dot { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--border); overflow: hidden; background-size: 180%; background-position: center 10%; cursor: pointer; position: relative; }
+        /* 修正：Bodyドットを少し大きく(46px) */
+        .grid-colors { display: flex; gap: 14px; flex-wrap: wrap; }
+        .color-dot { width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--border); overflow: hidden; background-size: 180%; background-position: center 10%; cursor: pointer; position: relative; }
         .color-dot.active::after { content: ''; position: absolute; inset: 0; border: 3px solid #000; border-radius: 50%; }
         
-        /* 修正：カバーアイテムのサイズを半分（コンパクト）に */
         .grid-covers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
         .cover-item { aspect-ratio: 1.1; border: 1px solid var(--border); border-radius: 10px; background: #fff; display: flex; justify-content: center; align-items: center; padding: 5px; cursor: pointer; }
         .cover-item.active { border: 2px solid #000; background: #fafafa; }
         .cover-thumb { width: 50%; height: 50%; object-fit: contain; }
 
         .community-area-box { flex: 1; position: relative; overflow: hidden; background: #fcfcfc; border-radius: 20px; border: 1px dashed var(--border); cursor: grab; touch-action: none; z-index: 5; min-height: 100px; }
-        #saver-layer { position: fixed; inset: 0; background: #fff; z-index: 9000; display: none; cursor: grab; }
+        
+        /* 修正：セーバー層でのドラッグをiPadで可能にする */
+        #saver-layer { position: fixed; inset: 0; background: #fff; z-index: 9000; display: none; cursor: grab; touch-action: none; }
         body.saver-active #saver-layer { display: block; }
+        
         .community-item { position: absolute; width: 34px; height: 44px; pointer-events: none; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); will-change: left, top, transform; }
         .saver-active .community-item { width: 80px; height: 104px; transition: width 0.8s, height 0.8s; }
         #saver-guide { position: fixed; bottom: 50px; right: 50px; width: 400px; opacity: 0; transition: 0.5s; z-index: 11000; pointer-events: none; cursor: pointer; }
@@ -79,7 +82,6 @@
 
         .overlay { position: fixed; inset: 0; background: var(--overlay-dim); z-index: 50000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.4s ease; }
         .overlay.show { display: flex; opacity: 1; }
-        
         .survey-card { background: #fff; width: 90%; max-width: 1050px; height: 85%; border-radius: 40px; overflow: hidden; display: grid; grid-template-columns: 1fr 1.2fr; box-shadow: 0 40px 100px rgba(0,0,0,0.3); }
         .survey-preview { background: #f9f9f9; display: flex; justify-content: center; align-items: center; padding: 60px; position: relative; }
         .survey-form { padding: 40px 50px; display: flex; flex-direction: column; justify-content: center; overflow-y: auto; }
@@ -88,7 +90,6 @@
 
         #thanks-overlay { position: absolute; inset: 0; background: rgba(255,255,255,0.95); display: none; justify-content: center; align-items: center; z-index: 100; flex-direction: column; opacity: 0; transition: opacity 0.4s ease; }
         #thanks-overlay.show { display: flex; opacity: 1; }
-        
         .admin-menu { background: #fff; padding: 40px; border-radius: 30px; width: 500px; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,0.1); }
         .admin-btn { width: 100%; padding: 18px; margin: 5px 0; border: 1px solid #ddd; background: #fff; font-weight: 700; border-radius: 15px; cursor: pointer; }
     </style>
@@ -99,7 +100,7 @@
 <button class="admin-trigger ui-part" onclick="openAdmin()">⚙</button>
 <div class="manual-saver-trigger" onclick="startSaver()"></div>
 
-<div id="saver-layer" onpointerdown="onPointerDown(event)">
+<div id="saver-layer">
     <img id="saver-bg-img" src="image/saver_bg.png" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); max-width:60%; opacity:0.05; pointer-events:none;" onerror="this.style.display='none'">
 </div>
 <img id="saver-guide" src="image/guide.png" onpointerdown="stopSaver(event)" onerror="this.style.display='none'">
@@ -187,8 +188,14 @@
         setTimeout(()=>loadCommunity(true), 1000);
         requestAnimationFrame(updateAnimation);
         resetInactivityTimer();
-        [document.getElementById('community-area'), document.getElementById('saver-layer')].forEach(a => a.addEventListener('pointerdown', onPointerDown));
-        window.addEventListener('pointermove', onPointerMove); window.addEventListener('pointerup', ()=>grabbedItem=null);
+        
+        // 修正：iPadでのドラッグ検知を強化
+        const touchTargets = [document.getElementById('community-area'), document.getElementById('saver-layer')];
+        touchTargets.forEach(t => {
+            t.addEventListener('pointerdown', onPointerDown, { passive: false });
+        });
+        window.addEventListener('pointermove', onPointerMove, { passive: false });
+        window.addEventListener('pointerup', ()=>grabbedItem=null);
     }
 
     function handlePostAction() { if (isSurveyEnabled) showSurvey(); else executeFinalPost(); }
@@ -256,6 +263,8 @@
     function changePW(){ const n=prompt("New PW"); if(n){ const s = JSON.parse(localStorage.getItem(CONFIG.settingsKey)||'{}'); s.pw=n; localStorage.setItem(CONFIG.settingsKey, JSON.stringify(s)); alert("Changed"); } }
 
     function onPointerDown(e){
+        // iPad特有のスクロール無効化
+        if(e.cancelable) e.preventDefault();
         const target = isSaverActive ? document.getElementById('saver-layer') : document.getElementById('community-area');
         const rect = target.getBoundingClientRect();
         const tx = ((e.clientX - rect.left) / rect.width) * 100, ty = ((e.clientY - rect.top) / rect.height) * 100;
@@ -267,7 +276,15 @@
             if(d < r){ i.vx+=(dx/d)*(r-d)*0.6; i.vy+=(dy/d)*(r-d)*0.6; i.dr+=(Math.random()-0.5)*10; }
         }); }
     }
-    function onPointerMove(e){ if(!grabbedItem)return; const target = isSaverActive ? document.getElementById('saver-layer') : document.getElementById('community-area'); const rect = target.getBoundingClientRect(); const tx=((e.clientX-rect.left)/rect.width)*100, ty=((e.clientY-rect.top)/rect.height)*100; grabbedItem.vx = (tx - grabbedItem.x) * 0.85; grabbedItem.vy = (ty - grabbedItem.y) * 0.85; grabbedItem.x = tx; grabbedItem.y = ty; }
+    function onPointerMove(e){ 
+        if(!grabbedItem)return; 
+        if(e.cancelable) e.preventDefault();
+        const target = isSaverActive ? document.getElementById('saver-layer') : document.getElementById('community-area');
+        const rect = target.getBoundingClientRect();
+        const tx=((e.clientX-rect.left)/rect.width)*100, ty=((e.clientY-rect.top)/rect.height)*100;
+        grabbedItem.vx = (tx - grabbedItem.x) * 0.85; grabbedItem.vy = (ty - grabbedItem.y) * 0.85;
+        grabbedItem.x = tx; grabbedItem.y = ty;
+    }
 
     function updateAnimation(){
         const lx=isSaverActive?94:92, ly=isSaverActive?92:82, md=isSaverActive?10:7; 
@@ -303,7 +320,7 @@
         (isSaverActive ? document.getElementById('saver-layer') : document.getElementById('community-area')).appendChild(el); communityItems.push(it);
     }
     function downloadCSV(){ const d = JSON.parse(localStorage.getItem(CONFIG.storageKey)||'[]'); const csv = "\ufeffTime,Base,Cover,Age,Gender\n" + d.map(i=>`${i.t},${i.b},${i.c},${i.age},${i.gen}`).join("\n"); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); a.download = `booth_results.csv`; a.click(); }
-    function resetData(){ if(confirm("Reset ALL data?")) { localStorage.removeItem(CONFIG.storageKey); communityItems.forEach(i => i.el.remove()); communityItems = []; location.reload(); } }
+    function resetData(){ if(confirm("Reset ALL data and Community?")) { localStorage.removeItem(CONFIG.storageKey); communityItems.forEach(i => i.el.remove()); communityItems = []; location.reload(); } }
     init();
 </script>
 </body>
