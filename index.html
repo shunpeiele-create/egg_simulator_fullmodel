@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>EGG MOUSE SIMULATOR v131</title>
+    <title>EGG MOUSE SIMULATOR v132</title>
     
     <link rel="apple-touch-icon" href="image/base_1.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -84,16 +84,21 @@
             100% { transform: scale(1) rotate(var(--base-rot)); filter: brightness(1); opacity: 1; }
         }
         .new-arrival { animation: popInFlash 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important; }
-        
-        /* 修正：バウンスアニメーションの強化 (-15px) */
-        @keyframes unlockBounce { 
-            0% { transform: translateY(0); } 
-            40% { transform: translateY(-15px); } 
-            100% { transform: translateY(0); } 
-        }
+        @keyframes unlockBounce { 0% { transform: translateY(0); } 40% { transform: translateY(-15px); } 100% { transform: translateY(0); } }
         .is-unlocking { animation: unlockBounce 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
-        #saver-guide { position: fixed; bottom: 50px; right: 50px; width: 400px; opacity: 0; transition: 0.5s; z-index: 11000; pointer-events: none; cursor: pointer; }
+        /* 修正：ガイド画像のサイズを倍増 (400px -> 800px) */
+        #saver-guide { 
+            position: fixed; 
+            bottom: 60px; /* 少し上に調整 */
+            right: 60px;  /* 余白も少し調整 */
+            width: 800px; /* サイズ倍増 */
+            opacity: 0; 
+            transition: 0.5s; 
+            z-index: 11000; 
+            pointer-events: none; 
+            cursor: pointer; 
+        }
 
         .submit-btn { width: 100%; padding: 22px; background: #000; color: #fff; border: none; border-radius: 20px; font-size: 20px; font-weight: 900; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; letter-spacing: 0.08em; }
         .submit-btn:disabled { background: var(--disabled); color: #8e8e93; }
@@ -175,10 +180,10 @@
         <div style="display:flex; justify-content:space-between; align-items:center; padding:15px 20px; background:#f2f2f7; border-radius:15px; margin-bottom:15px; cursor:pointer;" onclick="toggleSurveySetting()">
             <span style="font-weight:900;">Survey Form (アンケート表示)</span><span id="survey-status-label" style="font-weight:900;">ON</span>
         </div>
-        <button onclick="downloadCSV()" style="width:100%; padding:18px; margin:5px 0; border:1px solid #ddd; background:#fff; font-weight:900; border-radius:15px; cursor:pointer;">CSV DOWNLOAD</button>
-        <button onclick="changePW()" style="width:100%; padding:18px; margin:5px 0; border:1px solid #ddd; background:#fff; font-weight:900; border-radius:15px; cursor:pointer;">CHANGE PASSWORD</button>
-        <button onclick="resetData()" style="width:100%; padding:18px; margin:5px 0; border:1px solid red; color:red; background:#fff; font-weight:900; border-radius:15px; cursor:pointer;">RESET ALL DATA</button>
-        <button onclick="closeAdmin()" style="width:100%; padding:18px; margin:15px 0 0; background:#eee; border:none; border-radius:15px; cursor:pointer;">CLOSE</button>
+        <button onclick="downloadCSV()" class="admin-btn">CSV DOWNLOAD</button>
+        <button onclick="changePW()" class="admin-btn">CHANGE PASSWORD</button>
+        <button onclick="resetData()" class="admin-btn" style="color:red; border-color:red;">RESET ALL DATA</button>
+        <button onclick="closeAdmin()" class="admin-btn" style="background:#eee; border:none; margin-top:20px;">CLOSE</button>
     </div>
 </div>
 
@@ -222,10 +227,9 @@
         window.addEventListener('pointerup', ()=>grabbedItem=null);
     }
 
-    // 修正：確実なバウンス発火用ヘルパー
     function triggerBounce(el) {
         el.classList.remove('is-unlocking');
-        void el.offsetWidth; // リフロー強制
+        void el.offsetWidth;
         el.classList.add('is-unlocking');
     }
 
@@ -248,22 +252,19 @@
         selectedBase = id; document.getElementById('img-default').style.opacity='0'; 
         const p = document.getElementById('main-preview'); p.style.opacity='1'; p.classList.remove('rise', 'fly');
         document.querySelectorAll('.color-dot').forEach((el,idx)=>el.classList.toggle('active', (idx+1)===id));
-        
         const cs = document.getElementById('section-cover'); 
         cs.classList.remove('locked');
-        triggerBounce(cs); // 修正：確実に跳ねさせる
+        triggerBounce(cs);
         updatePreview();
     }
     function selectCover(id){
         if(!selectedBase) return; selectedCover = id;
         document.querySelectorAll('.cover-item').forEach(el=>{ const isNone=el.innerText.includes('REMOVE')&&id===0; const hasMatch=el.querySelector('img')&&el.querySelector('img').src.includes(`cover_${id}.png`); el.classList.toggle('active', isNone||hasMatch); });
-        
         document.getElementById('submitBtn').disabled = (id===0);
         document.getElementById('cover-alert').classList.toggle('show', id===0);
-        
         if(id !== 0) { 
             const btn = document.getElementById('submitBtn'); 
-            triggerBounce(btn); // 修正：ボタンも確実に跳ねさせる
+            triggerBounce(btn);
         }
         updatePreview();
     }
@@ -340,10 +341,7 @@
     function updatePreview(){ document.getElementById('img-base').src=`image/base_${selectedBase}.png`; const c=document.getElementById('img-cover'); if(selectedCover>0){ c.src=`image/cover_${selectedCover}.png`; c.style.opacity="1"; } else { c.style.opacity="0"; } }
     function loadCommunity(it){ if(it){ for(let i=0; i<5; i++){ if(validCoverIdsForRandom.length) addCommunityItem(Math.floor(Math.random()*5)+1, validCoverIdsForRandom[Math.floor(Math.random()*validCoverIdsForRandom.length)], true); } } }
     function addCommunityItem(b,c,isInitial){ 
-        const el=document.createElement('div'); el.className='community-item'; 
-        if(!isInitial) {
-            el.classList.add('new-arrival');
-        }
+        const el=document.createElement('div'); el.className='community-item'; if(!isInitial) el.classList.add('new-arrival'); 
         el.style.width = "34px"; el.style.height = "44px";
         el.innerHTML=`<img src="image/base_${b}.png" style="width:100%;position:absolute;"><img src="image/cover_${c}.png" style="width:100%;position:absolute;opacity:${c===0?0:1}" onerror="this.style.opacity=0">`; 
         const r=Math.random()*360; el.style.setProperty('--base-rot', r+'deg'); 
