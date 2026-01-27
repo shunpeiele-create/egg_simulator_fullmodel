@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>EGG MOUSE SIMULATOR v118</title>
+    <title>EGG MOUSE SIMULATOR v119</title>
     
     <link rel="apple-touch-icon" href="image/base_1.png">
     
@@ -58,7 +58,9 @@
 
         .section { margin-bottom: 20px; transition: opacity 0.4s ease; }
         .section.locked { opacity: 0.15; pointer-events: none; }
-        .section-label { font-size: 13px; font-weight: 900; color: #000; margin-bottom: 10px; display: block; letter-spacing: 0.05em; }
+        
+        /* 修正：タイトル系文字を+2pt (13px -> 15px) */
+        .section-label { font-size: 15px; font-weight: 900; color: #000; margin-bottom: 10px; display: block; letter-spacing: 0.05em; }
         
         .grid-colors { display: flex; gap: 14px; flex-wrap: wrap; }
         .color-dot { width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--border); overflow: hidden; background-size: 180%; background-position: center 10%; cursor: pointer; position: relative; }
@@ -71,17 +73,16 @@
 
         .community-area-box { flex: 1; position: relative; overflow: hidden; background: #fcfcfc; border-radius: 20px; border: 1px dashed var(--border); cursor: grab; touch-action: none; z-index: 5; min-height: 100px; }
         
-        /* 修正：セーバー画面のアイテムを大きくし、残像防止策を適用 */
         #saver-layer { position: fixed; inset: 0; background: #fff; z-index: 9000; display: none; cursor: grab; touch-action: none; }
         body.saver-active #saver-layer { display: block; }
         
         .community-item { 
             position: absolute; 
-            width: 50px; height: 65px; /* サイズアップ */
+            width: 50px; height: 65px;
             pointer-events: none; 
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); 
             will-change: left, top, transform;
-            backface-visibility: hidden; /* 残像防止 */
+            backface-visibility: hidden;
         }
         
         #saver-guide { position: fixed; bottom: 50px; right: 50px; width: 400px; opacity: 0; transition: 0.5s; z-index: 11000; pointer-events: none; cursor: pointer; }
@@ -93,7 +94,6 @@
         .overlay.show { display: flex; opacity: 1; }
         .survey-card { background: #fff; width: 90%; max-width: 1050px; height: 85%; border-radius: 40px; overflow: hidden; display: grid; grid-template-columns: 1fr 1.2fr; box-shadow: 0 40px 100px rgba(0,0,0,0.3); }
         
-        /* 修正：アンケート内の製品プレビュー。はみ出さないサイズ(65%) */
         .survey-preview { background: #f9f9f9; display: flex; justify-content: center; align-items: center; padding: 60px; position: relative; overflow: hidden; }
         .survey-preview .preview-wrapper { height: 65%; width: 65%; max-height: 65%; max-width: 65%; opacity: 1 !important; }
 
@@ -103,6 +103,7 @@
 
         #thanks-overlay { position: absolute; inset: 0; background: rgba(255,255,255,0.95); display: none; justify-content: center; align-items: center; z-index: 100; flex-direction: column; opacity: 0; transition: opacity 0.4s ease; }
         #thanks-overlay.show { display: flex; opacity: 1; }
+        
         .admin-menu { background: #fff; padding: 40px; border-radius: 30px; width: 500px; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,0.1); }
         .admin-btn { width: 100%; padding: 18px; margin: 5px 0; border: 1px solid #ddd; background: #fff; font-weight: 900; border-radius: 15px; cursor: pointer; }
     </style>
@@ -135,10 +136,10 @@
     </div>
     <div class="control-pane ui-part">
         <div style="flex:1; display:flex; flex-direction:column; min-height:0;">
-            <section class="section" id="section-base"><span class="section-label">01. SELECT BODY COLOR  <small>(本体色を選択してください)</small></span><div class="grid-colors" id="base-options"></div></section>
-            <section class="section locked" id="section-cover"><span class="section-label">02. CHOOSE COVER  <small>(カバーを選択してください)</small></span><div class="grid-covers" id="cover-options"></div></section>
-            <span class="section-label">COMMUNITY <small>(みんなのEGG MOUSE)</small></span><div id="community-area" class="community-area-box"></div>
-            <div style="font-size:10px; color:var(--text-sub); text-align:right; margin-top:5px; font-weight:900;">Latest 20 posts <small style="font-weight:400;">(最新の20件)</small></div>
+            <section class="section" id="section-base"><span class="section-label">01. SELECT BODY COLOR  <small style="font-weight:400; font-size:11px;">(本体色を選択してください)</small></span><div class="grid-colors" id="base-options"></div></section>
+            <section class="section locked" id="section-cover"><span class="section-label">02. CHOOSE COVER  <small style="font-weight:400; font-size:11px;">(カバーを選択してください)</small></span><div class="grid-covers" id="cover-options"></div></section>
+            <span class="section-label">COMMUNITY <small style="font-weight:400; font-size:11px;">(みんなのEGG MOUSE)</small></span><div id="community-area" class="community-area-box"></div>
+            <div style="font-size:11px; color:var(--text-sub); text-align:right; margin-top:5px; font-weight:900;">Latest 20 posts <small style="font-weight:400;">(最新の20件)</small></div>
         </div>
         <div id="btn-container">
             <div id="cover-alert" class="alert-text" style="font-weight:900;">Please choose a cover <small style="font-weight:700;">(カバーを選んでください)</small></div>
@@ -156,7 +157,10 @@
             <div id="age-chips"><span class="section-label">年齢 Age</span><div class="chip" onclick="setSurvey('age','30歳未満')">30歳未満 (Under 30)</div><div class="chip" onclick="setSurvey('age','30代')">30代 (30s)</div><div class="chip" onclick="setSurvey('age','40代')">40代 (40s)</div><div class="chip" onclick="setSurvey('age','50歳以上')">50歳以上 (Over 50)</div><div class="chip" onclick="setSurvey('age','選択しない')">選択しない (N/A)</div></div>
             <div id="gender-chips" style="margin-top:20px;"><span class="section-label">性別 Gender</span><div class="chip" onclick="setSurvey('gender','男性')">男性 (Male)</div><div class="chip" onclick="setSurvey('gender','女性')">女性 (Female)</div><div class="chip" onclick="setSurvey('gender','選択しない')">選択しない (N/A)</div></div>
             <div style="font-size:11px; color:var(--text-sub); line-height:1.5; margin:20px 0 25px; padding:15px; background:#f2f2f7; border-radius:12px; font-weight:700;">【個人情報の取り扱い】ご入力いただいた情報は統計データとして活用いたします。特定の個人を識別する目的では使用いたしません。<br><span style="font-weight:400;">[Privacy Policy] Data used only for statistical purposes.</span></div>
-            <label style="display:flex; align-items:center; gap:12px; font-weight:900; margin-bottom:30px; cursor:pointer;"><input type="checkbox" id="agree-cb" style="width:24px; height:24px; accent-color:#000;" onchange="updateFinalBtn()"><span>同意して投稿する Agree and Post</span></label>
+            <label style="display:flex; align-items:center; gap:12px; font-weight:900; margin-bottom:30px; cursor:pointer;">
+                <input type="checkbox" id="agree-cb" style="width:24px; height:24px; accent-color:#000;" onchange="updateFinalBtn()">
+                <span>個人情報の取り扱い事項に同意する <small style="font-weight:400;">(Agree to the privacy policy)</small></span>
+            </label>
             <div style="display:flex; gap:15px;"><button class="submit-btn" style="background:#eee; color:#000; flex:1;" onclick="hideSurvey()">戻る Back</button><button id="finalPostBtn" class="submit-btn" style="flex:2;" onclick="executeFinalPost()" disabled>POST NOW</button></div>
         </div>
     </div>
@@ -176,7 +180,7 @@
 </div>
 
 <script>
-    const CONFIG = { storageKey: 'egg_mouse_v118_data', settingsKey: 'egg_mouse_v115_set', inactivityLimit: 60000, baseCount: 5, coverMax: 10 };
+    const CONFIG = { storageKey: 'egg_mouse_v119_data', settingsKey: 'egg_mouse_v115_set', inactivityLimit: 60000, baseCount: 5, coverMax: 10 };
     let communityItems = [], inactivityTimer, isSaverActive = false, grabbedItem = null;
     let selectedBase = null, selectedCover = null, validCoverIdsForRandom = [];
     let surveyInput = { age: '', gender: '' }, isSurveyEnabled = true;
@@ -201,7 +205,6 @@
         setTimeout(()=>loadCommunity(true), 1000);
         requestAnimationFrame(updateAnimation);
         resetInactivityTimer();
-        
         const touchTargets = [document.getElementById('community-area'), document.getElementById('saver-layer')];
         touchTargets.forEach(t => { t.addEventListener('pointerdown', onPointerDown, { passive: false }); });
         window.addEventListener('pointermove', onPointerMove, { passive: false });
@@ -250,9 +253,7 @@
 
     function showSurvey(){
         const target=document.getElementById('survey-clone-target'); target.innerHTML='';
-        const clone=document.getElementById('main-preview').cloneNode(true); 
-        clone.style.opacity='1';
-        clone.classList.remove('animate-on','rise','fly');
+        const clone=document.getElementById('main-preview').cloneNode(true); clone.style.opacity='1'; clone.classList.remove('animate-on','rise','fly');
         clone.style.top = "50%"; clone.style.left = "50%"; clone.style.transform = "translate(-50%, -50%) scale(1)";
         target.appendChild(clone);
         document.getElementById('agree-cb').checked = false; document.getElementById('finalPostBtn').disabled = true;
@@ -303,20 +304,18 @@
         document.body.classList.add('saver-active'); 
         communityItems.forEach(i => {
             document.getElementById('saver-layer').appendChild(i.el);
-            i.el.style.width = "80px"; i.el.style.height = "104px"; // セーバー中は大きく
+            i.el.style.width = "80px"; i.el.style.height = "104px";
         }); 
-        document.getElementById('saver-guide').style.opacity = 1; 
-        document.getElementById('saver-guide').style.pointerEvents = 'auto'; 
+        document.getElementById('saver-guide').style.opacity = 1; document.getElementById('saver-guide').style.pointerEvents = 'auto'; 
     }
     function stopSaver(e){ 
         if(e) e.stopPropagation(); isSaverActive = false; 
         document.body.classList.remove('saver-active'); 
         communityItems.forEach(i => {
             document.getElementById('community-area').appendChild(i.el);
-            i.el.style.width = "34px"; i.el.style.height = "44px"; // 通常時は戻す
+            i.el.style.width = "34px"; i.el.style.height = "44px";
         }); 
-        document.getElementById('saver-guide').style.opacity = 0; 
-        document.getElementById('saver-guide').style.pointerEvents = 'none'; 
+        document.getElementById('saver-guide').style.opacity = 0; document.getElementById('saver-guide').style.pointerEvents = 'none'; 
         resetInactivityTimer(); 
     }
     function updatePreview(){ document.getElementById('img-base').src=`image/base_${selectedBase}.png`; const c=document.getElementById('img-cover'); if(selectedCover>0){ c.src=`image/cover_${selectedCover}.png`; c.style.opacity="1"; } else { c.style.opacity="0"; } }
