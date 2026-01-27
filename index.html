@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>EGG MOUSE SIMULATOR v128</title>
+    <title>EGG MOUSE SIMULATOR v129</title>
     
     <link rel="apple-touch-icon" href="image/base_1.png">
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
@@ -18,14 +19,19 @@
             --text-sub: #8e8e93; --alert: #ff3b30; --disabled: #d1d1d6; --overlay-dim: rgba(0,0,0,0.4);
         }
         * { 
-            box-sizing: border-box; -webkit-tap-highlight-color: transparent; 
-            -webkit-user-select: none; -webkit-touch-callout: none;
-            user-select: none; outline: none; 
+            box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent; 
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            user-select: none; 
+            outline: none; 
             font-family: "futura-pt", Futura, "Helvetica Neue", "Source Han Sans JP", "Noto Sans JP", sans-serif;
         }
         html, body { 
             margin: 0; padding: 0; background: var(--primary-bg); 
-            overflow: hidden; height: 100%; width: 100%; position: fixed;
+            overflow: hidden; 
+            height: 100%; width: 100%; 
+            position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
         }
 
@@ -66,21 +72,22 @@
         .color-dot { width: 50px; height: 50px; border-radius: 50%; border: 1px solid var(--border); overflow: hidden; background-size: 180%; background-position: center 10%; cursor: pointer; position: relative; }
         .color-dot.active::after { content: ''; position: absolute; inset: 0; border: 3px solid #000; border-radius: 50%; }
         
-        /* 修正：初期値は指定せず、JSで動的に書き換える */
+        /* 修正：11個を収めるための4列グリッド */
         .grid-covers { 
             display: grid; 
-            gap: 8px; 
+            grid-template-columns: repeat(4, 1fr); /* 4列に変更 */
+            gap: 6px; /* 隙間を少し詰める */
             width: 100%;
-            /* grid-template-columns はJSで制御 */
         }
-        
         .cover-item { 
-            aspect-ratio: 1.15; border: 1px solid var(--border); border-radius: 10px; 
+            aspect-ratio: 1.1; 
+            border: 1px solid var(--border); border-radius: 10px; /* 角丸を少し小さく */
             background: #fff; display: flex; justify-content: center; align-items: center; 
-            padding: 4px; cursor: pointer;
+            padding: 4px; /* 余白を調整 */
+            cursor: pointer; 
         }
         .cover-item.active { border: 2.5px solid #000; background: #fafafa; }
-        .cover-thumb { width: 50%; height: 50%; object-fit: contain; }
+        .cover-thumb { width: 55%; height: 55%; object-fit: contain; } /* 画像比率を少しアップ */
 
         .community-area-box { flex: 1; position: relative; overflow: hidden; background: #fcfcfc; border-radius: 20px; border: 1px dashed var(--border); cursor: grab; touch-action: none; z-index: 5; margin-bottom: 25px; min-height: 100px; }
         
@@ -88,9 +95,13 @@
         body.saver-active #saver-layer { display: block; }
         
         .community-item { 
-            position: absolute; width: 34px; height: 44px; pointer-events: none; 
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); will-change: left, top, transform;
-            backface-visibility: hidden; transition: width 0.8s, height 0.8s;
+            position: absolute; 
+            width: 34px; height: 44px;
+            pointer-events: none; 
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); 
+            will-change: left, top, transform;
+            backface-visibility: hidden;
+            transition: width 0.8s, height 0.8s;
         }
 
         @keyframes popInFlash {
@@ -189,7 +200,8 @@
 </div>
 
 <script>
-    const CONFIG = { storageKey: 'egg_mouse_v128_data', settingsKey: 'egg_mouse_v115_set', inactivityLimit: 60000, baseCount: 5, coverMax: 10 };
+    // 修正：カバー最大数を10 (アイテム数11) に変更
+    const CONFIG = { storageKey: 'egg_mouse_v129_data', settingsKey: 'egg_mouse_v115_set', inactivityLimit: 60000, baseCount: 5, coverMax: 10 };
     let communityItems = [], inactivityTimer, isSaverActive = false, grabbedItem = null;
     let selectedBase = null, selectedCover = null, validCoverIdsForRandom = [];
     let surveyInput = { age: '', gender: '' }, isSurveyEnabled = true;
@@ -213,15 +225,6 @@
                 img.onerror=()=>itm.remove();
             }
         }
-        
-        // 修正：動的カラム計算ロジック
-        const totalCovers = cc.children.length; // REMOVEボタン含む総数
-        let cols = 3;
-        if (totalCovers >= 9) cols = 5;      // 8-9個 (アイテム数9以上) -> 5列
-        else if (totalCovers >= 7) cols = 4; // 6-8個 (アイテム数7以上) -> 4列
-        // 6個 (アイテム数7未満) -> 3列
-        cc.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-
         setTimeout(()=>loadCommunity(true), 1000);
         requestAnimationFrame(updateAnimation);
         resetInactivityTimer();
@@ -334,34 +337,16 @@
     }
     function updatePreview(){ document.getElementById('img-base').src=`image/base_${selectedBase}.png`; const c=document.getElementById('img-cover'); if(selectedCover>0){ c.src=`image/cover_${selectedCover}.png`; c.style.opacity="1"; } else { c.style.opacity="0"; } }
     function loadCommunity(it){ if(it){ for(let i=0; i<5; i++){ if(validCoverIdsForRandom.length) addCommunityItem(Math.floor(Math.random()*5)+1, validCoverIdsForRandom[Math.floor(Math.random()*validCoverIdsForRandom.length)], true); } } }
-    
     function addCommunityItem(b,c,isInitial){ 
-        const el=document.createElement('div'); el.className='community-item'; 
-        if(!isInitial) {
-            el.classList.add('new-arrival');
-        }
+        const el=document.createElement('div'); el.className='community-item'; if(!isInitial) el.classList.add('new-arrival'); 
         el.style.width = "34px"; el.style.height = "44px";
         el.innerHTML=`<img src="image/base_${b}.png" style="width:100%;position:absolute;"><img src="image/cover_${c}.png" style="width:100%;position:absolute;opacity:${c===0?0:1}" onerror="this.style.opacity=0">`; 
         const r=Math.random()*360; el.style.setProperty('--base-rot', r+'deg'); 
         const it={el,x:Math.random()*80+5,y:Math.random()*70+5,rot:r,dx:(Math.random()-0.5)*0.06,dy:(Math.random()-0.5)*0.06,dr:0,vx:0,vy:0}; 
         (isSaverActive ? document.getElementById('saver-layer') : document.getElementById('community-area')).appendChild(el); communityItems.push(it);
     }
-
     function downloadCSV(){ const d = JSON.parse(localStorage.getItem(CONFIG.storageKey)||'[]'); const csv = "\ufeffTime,Base,Cover,Age,Gender\n" + d.map(i=>`${i.t},${i.b},${i.c},${i.age},${i.gen}`).join("\n"); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); a.download = `booth_results.csv`; a.click(); }
     function resetData(){ if(confirm("Reset ALL data and Community?")) { localStorage.removeItem(CONFIG.storageKey); communityItems.forEach(i => i.el.remove()); communityItems = []; location.reload(); } }
-    
-    // (ADMIN系は変更なし)
-    function openAdmin(){
-        const set = JSON.parse(localStorage.getItem(CONFIG.settingsKey) || '{"pw":"1234"}');
-        const pw = prompt("Password");
-        if(pw === set.pw) { document.getElementById('admin-overlay').classList.add('show'); }
-        else if(pw !== null) { alert("Incorrect password"); }
-    }
-    function closeAdmin(){ document.getElementById('admin-overlay').classList.remove('show'); }
-    function toggleSurveySetting(){ isSurveyEnabled=!isSurveyEnabled; const s = JSON.parse(localStorage.getItem(CONFIG.settingsKey)||'{}'); s.survey=isSurveyEnabled; localStorage.setItem(CONFIG.settingsKey, JSON.stringify(s)); updateSurveyUI(); }
-    function updateSurveyUI(){ const l=document.getElementById('survey-status-label'); l.innerText=isSurveyEnabled?'ON':'OFF'; l.style.color=isSurveyEnabled?'#34c759':'#8e8e93'; }
-    function changePW(){ const n=prompt("New PW"); if(n){ const s = JSON.parse(localStorage.getItem(CONFIG.settingsKey)||'{}'); s.pw=n; localStorage.setItem(CONFIG.settingsKey, JSON.stringify(s)); alert("Changed"); } }
-
     init();
 </script>
 </body>
