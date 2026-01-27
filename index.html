@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Booth Posting Tool v114</title>
+    <title>EGG MOUSE SIMULATOR v115</title>
     <style>
         :root {
             --primary-bg: #f8f8f8; --panel-bg: #ffffff; --border: #e5e5ea;
@@ -57,7 +57,6 @@
         .section.locked { opacity: 0.15; pointer-events: none; }
         .section-label { font-size: 13px; font-weight: 800; color: #000; margin-bottom: 10px; display: block; }
         
-        /* 修正：Bodyドットを少し大きく(46px) */
         .grid-colors { display: flex; gap: 14px; flex-wrap: wrap; }
         .color-dot { width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--border); overflow: hidden; background-size: 180%; background-position: center 10%; cursor: pointer; position: relative; }
         .color-dot.active::after { content: ''; position: absolute; inset: 0; border: 3px solid #000; border-radius: 50%; }
@@ -69,7 +68,6 @@
 
         .community-area-box { flex: 1; position: relative; overflow: hidden; background: #fcfcfc; border-radius: 20px; border: 1px dashed var(--border); cursor: grab; touch-action: none; z-index: 5; min-height: 100px; }
         
-        /* 修正：セーバー層でのドラッグをiPadで可能にする */
         #saver-layer { position: fixed; inset: 0; background: #fff; z-index: 9000; display: none; cursor: grab; touch-action: none; }
         body.saver-active #saver-layer { display: block; }
         
@@ -142,7 +140,7 @@
             <p style="font-size:14px; color:var(--text-sub); margin-bottom:30px;">アンケートにご協力ください（任意）<br>Please help us with our survey (Optional)</p>
             <div id="age-chips"><span class="section-label">年齢 Age</span><div class="chip" onclick="setSurvey('age','30歳未満')">30歳未満 (Under 30)</div><div class="chip" onclick="setSurvey('age','30代')">30代 (30s)</div><div class="chip" onclick="setSurvey('age','40代')">40代 (40s)</div><div class="chip" onclick="setSurvey('age','50歳以上')">50歳以上 (Over 50)</div><div class="chip" onclick="setSurvey('age','選択しない')">選択しない (N/A)</div></div>
             <div id="gender-chips" style="margin-top:20px;"><span class="section-label">性別 Gender</span><div class="chip" onclick="setSurvey('gender','男性')">男性 (Male)</div><div class="chip" onclick="setSurvey('gender','女性')">女性 (Female)</div><div class="chip" onclick="setSurvey('gender','選択しない')">選択しない (N/A)</div></div>
-            <div style="font-size:11px; color:var(--text-sub); line-height:1.5; margin:20px 0 25px; padding:15px; background:#f2f2f7; border-radius:12px;">【個人情報の取り扱い】ご入力いただいた情報は統計データとして活用し、特定の個人を識別する目的では使用いたしません。[Privacy Policy] Data used only for statistical purposes.</div>
+            <div style="font-size:11px; color:var(--text-sub); line-height:1.5; margin:20px 0 25px; padding:15px; background:#f2f2f7; border-radius:12px;">【個人情報の取り扱い】ご入力いただいた情報は統計データとして活用いたします。特定の個人を識別する目的では使用いたしません。[Privacy Policy] Data used only for statistical purposes.</div>
             <label style="display:flex; align-items:center; gap:12px; font-weight:700; margin-bottom:30px; cursor:pointer;"><input type="checkbox" id="agree-cb" style="width:24px; height:24px; accent-color:#000;" onchange="updateFinalBtn()"><span>同意して投稿する Agree and Post</span></label>
             <div style="display:flex; gap:15px;"><button class="submit-btn" style="background:#eee; color:#000; flex:1;" onclick="hideSurvey()">戻る Back</button><button id="finalPostBtn" class="submit-btn" style="flex:2;" onclick="executeFinalPost()" disabled>POST NOW</button></div>
         </div>
@@ -151,7 +149,7 @@
 
 <div id="admin-overlay" class="overlay">
     <div class="admin-menu">
-        <h2 style="margin-bottom:25px">ADMIN SETTINGS</h2>
+        <h2 style="margin-bottom:25px">EGG MOUSE SIMULATOR SETTINGS</h2>
         <div style="display:flex; justify-content:space-between; align-items:center; padding:15px 20px; background:#f2f2f7; border-radius:15px; margin-bottom:15px; cursor:pointer;" onclick="toggleSurveySetting()">
             <span>Survey Form (アンケート表示)</span><span id="survey-status-label" style="font-weight:900;">ON</span>
         </div>
@@ -163,7 +161,7 @@
 </div>
 
 <script>
-    const CONFIG = { storageKey: 'booth_v107_data', settingsKey: 'booth_v107_set', inactivityLimit: 60000, baseCount: 5, coverMax: 10 };
+    const CONFIG = { storageKey: 'egg_mouse_v115_data', settingsKey: 'egg_mouse_v115_set', inactivityLimit: 60000, baseCount: 5, coverMax: 10 };
     let communityItems = [], inactivityTimer, isSaverActive = false, grabbedItem = null;
     let selectedBase = null, selectedCover = null, validCoverIdsForRandom = [];
     let surveyInput = { age: '', gender: '' }, isSurveyEnabled = true;
@@ -189,7 +187,6 @@
         requestAnimationFrame(updateAnimation);
         resetInactivityTimer();
         
-        // 修正：iPadでのドラッグ検知を強化
         const touchTargets = [document.getElementById('community-area'), document.getElementById('saver-layer')];
         touchTargets.forEach(t => {
             t.addEventListener('pointerdown', onPointerDown, { passive: false });
@@ -263,7 +260,6 @@
     function changePW(){ const n=prompt("New PW"); if(n){ const s = JSON.parse(localStorage.getItem(CONFIG.settingsKey)||'{}'); s.pw=n; localStorage.setItem(CONFIG.settingsKey, JSON.stringify(s)); alert("Changed"); } }
 
     function onPointerDown(e){
-        // iPad特有のスクロール無効化
         if(e.cancelable) e.preventDefault();
         const target = isSaverActive ? document.getElementById('saver-layer') : document.getElementById('community-area');
         const rect = target.getBoundingClientRect();
@@ -319,7 +315,7 @@
         const it={el,x:Math.random()*80+5,y:Math.random()*70+5,rot:r,dx:(Math.random()-0.5)*0.06,dy:(Math.random()-0.5)*0.06,dr:0,vx:0,vy:0}; 
         (isSaverActive ? document.getElementById('saver-layer') : document.getElementById('community-area')).appendChild(el); communityItems.push(it);
     }
-    function downloadCSV(){ const d = JSON.parse(localStorage.getItem(CONFIG.storageKey)||'[]'); const csv = "\ufeffTime,Base,Cover,Age,Gender\n" + d.map(i=>`${i.t},${i.b},${i.c},${i.age},${i.gen}`).join("\n"); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); a.download = `booth_results.csv`; a.click(); }
+    function downloadCSV(){ const d = JSON.parse(localStorage.getItem(CONFIG.storageKey)||'[]'); const csv = "\ufeffTime,Base,Cover,Age,Gender\n" + d.map(i=>`${i.t},${i.b},${i.c},${i.age},${i.gen}`).join("\n"); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); a.download = `egg_mouse_results.csv`; a.click(); }
     function resetData(){ if(confirm("Reset ALL data and Community?")) { localStorage.removeItem(CONFIG.storageKey); communityItems.forEach(i => i.el.remove()); communityItems = []; location.reload(); } }
     init();
 </script>
