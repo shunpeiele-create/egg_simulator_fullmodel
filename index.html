@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Booth Posting Tool v94 - Ultimate Font</title>
+    <title>Booth Posting Tool v95 - Final Layout</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,7 +22,6 @@
             --overlay-dim: rgba(0,0,0,0.4);
         }
 
-        /* 全要素にフォント適用：英語優先Futura系、日本語源ノ角ゴシック */
         * { 
             box-sizing: border-box; 
             -webkit-tap-highlight-color: transparent; 
@@ -38,7 +37,9 @@
 
         .app-grid { display: grid; grid-template-columns: 1.8fr 1.2fr; height: 100vh; width: 100vw; position: relative; }
         .preview-pane { background: #fff; border-right: 1px solid var(--border); position: relative; display: flex; flex-direction: column; overflow: hidden; z-index: 10; height: 100%; }
-        .control-pane { background: var(--panel-bg); padding: 60px 50px 40px; display: flex; flex-direction: column; position: relative; z-index: 10; height: 100vh; }
+        
+        /* 右パネル：全体余白をスリム化 (padding: 40px 35px 25px) */
+        .control-pane { background: var(--panel-bg); padding: 40px 35px 25px; display: flex; flex-direction: column; position: relative; z-index: 10; height: 100vh; overflow: hidden; }
         
         .ui-part { transition: 0.4s; opacity: 1; }
         .saver-active .ui-part { opacity: 0; pointer-events: none; }
@@ -47,7 +48,6 @@
         .preview-outer { flex: 1; display: flex; justify-content: center; align-items: center; position: relative; }
         .default-img { position: absolute; width: 60%; max-height: 40%; object-fit: contain; z-index: 1; transition: opacity 0.8s ease; }
         
-        /* 飛行エフェクト */
         .preview-wrapper { position: relative; height: 50%; aspect-ratio: 179 / 232; display: flex; justify-content: center; align-items: center; z-index: 2; opacity: 0; transform: translateY(0) scale(1); }
         .preview-wrapper.animate-on { transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55), opacity: 0.4s ease, filter 0.5s ease; }
         .preview-wrapper.rise { transform: scale(1.15) translateY(-30px); opacity: 1 !important; filter: drop-shadow(0 30px 20px rgba(0,0,0,0.15)); }
@@ -62,19 +62,26 @@
 
         .layer { position: absolute; width: 100%; height: 100%; object-fit: contain; transition: 0.4s ease; }
 
-        .section { margin-bottom: 25px; }
+        /* セクション間隔の調整 (margin: 15px) */
+        .section { margin-bottom: 15px; }
         .section.locked { opacity: 0.15; pointer-events: none; }
         @keyframes unlockBounce { 0%, 100% {transform:translateY(0)} 30% {transform:translateY(-8px)} }
         .unlocking { animation: unlockBounce 0.5s ease; }
-        .section-label { font-size: 14px; font-weight: 900; color: #000; margin-bottom: 12px; display: block; letter-spacing: 0.05em; }
-        .grid-colors { display: flex; gap: 16px; flex-wrap: wrap; }
-        .color-dot { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border); overflow: hidden; background-size: 180%; background-position: center 10%; cursor: pointer; position: relative; }
+        .section-label { font-size: 13px; font-weight: 900; color: #000; margin-bottom: 8px; display: block; letter-spacing: 0.05em; }
+        
+        /* ドットサイズの調整 */
+        .grid-colors { display: flex; gap: 12px; flex-wrap: wrap; }
+        .color-dot { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--border); overflow: hidden; background-size: 180%; background-position: center 10%; cursor: pointer; position: relative; }
         .color-dot.active::after { content: ''; position: absolute; inset: 0; border: 3px solid #000; border-radius: 50%; }
-        .grid-covers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .cover-item { aspect-ratio: 1.25; border: 1px solid var(--border); border-radius: 12px; background: #fff; display: flex; justify-content: center; align-items: center; padding: 10px; cursor: pointer; }
-        .cover-item.active { border: 2.5px solid #000; background: #fafafa; }
+        
+        /* カバーグリッドの調整：iPadの高さを圧迫しないよう縮小 */
+        .grid-covers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .cover-item { aspect-ratio: 1.15; border: 1px solid var(--border); border-radius: 10px; background: #fff; display: flex; justify-content: center; align-items: center; padding: 6px; cursor: pointer; }
+        .cover-item.active { border: 2px solid #000; background: #fafafa; }
+        .cover-thumb { width: 55%; height: 55%; object-fit: contain; }
 
-        .community-area-box { flex: 1; position: relative; overflow: hidden; background: #fcfcfc; border-radius: 20px; border: 1px dashed var(--border); cursor: grab; touch-action: none; z-index: 5; }
+        /* コミュニティエリアの最小化 */
+        .community-area-box { flex: 1; min-height: 100px; position: relative; overflow: hidden; background: #fcfcfc; border-radius: 15px; border: 1px dashed var(--border); cursor: grab; touch-action: none; z-index: 5; margin-bottom: 10px; }
         #saver-layer { position: fixed; inset: 0; background: #fff; z-index: 9000; display: none; cursor: grab; }
         body.saver-active #saver-layer { display: block; }
         .community-item { position: absolute; width: 34px; height: 44px; pointer-events: none; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); will-change: left, top, transform; }
@@ -84,22 +91,24 @@
         
         #saver-guide { position: fixed; bottom: 50px; right: 50px; width: 400px; opacity: 0; transition: 0.5s; z-index: 11000; pointer-events: none; cursor: pointer; }
 
-        .alert-text { font-size: 11px; color: var(--alert); text-align: center; margin-bottom: 8px; font-weight: 800; opacity: 0; transition: 0.3s; }
+        .alert-text { font-size: 11px; color: var(--alert); text-align: center; margin-bottom: 5px; font-weight: 800; opacity: 0; transition: 0.3s; height: 14px; }
         .alert-text.show { opacity: 1; }
-        .submit-btn { width: 100%; padding: 22px; background: #000; color: #fff; border: none; border-radius: 20px; font-size: 18px; font-weight: 900; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; letter-spacing: 0.1em; }
+        
+        /* 投稿ボタンの高さ調整 */
+        .submit-btn { width: 100%; padding: 18px; background: #000; color: #fff; border: none; border-radius: 18px; font-size: 18px; font-weight: 900; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 1px; letter-spacing: 0.05em; }
         .submit-btn:disabled { background: var(--disabled); color: #8e8e93; }
 
         .overlay { position: fixed; inset: 0; background: var(--overlay-dim); z-index: 50000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.4s ease; }
         .overlay.show { display: flex; opacity: 1; }
-        .survey-card { background: #fff; width: 90%; max-width: 1050px; height: 85%; border-radius: 40px; overflow: hidden; display: grid; grid-template-columns: 1fr 1.2fr; box-shadow: 0 40px 100px rgba(0,0,0,0.3); }
+        .survey-card { background: #fff; width: 90%; max-width: 1050px; height: 85%; border-radius: 40px; overflow: hidden; display: grid; grid-template-columns: 1fr 1.2fr; }
         .survey-preview { background: #f9f9f9; display: flex; justify-content: center; align-items: center; padding: 60px; }
         .survey-form { padding: 40px 50px; display: flex; flex-direction: column; justify-content: center; overflow-y: auto; }
-        .chip { padding: 14px 20px; border: 1px solid var(--border); border-radius: 12px; background: #fff; font-weight: 700; cursor: pointer; font-size: 13px; margin: 0 8px 8px 0; display: inline-block; }
+        .chip { padding: 12px 18px; border: 1px solid var(--border); border-radius: 10px; background: #fff; font-weight: 700; cursor: pointer; font-size: 13px; margin: 0 8px 8px 0; display: inline-block; }
         .chip.active { background: #000; color: #fff; }
 
         #thanks-overlay { position: absolute; inset: 0; background: rgba(255,255,255,0.95); display: none; justify-content: center; align-items: center; z-index: 100; flex-direction: column; opacity: 0; transition: opacity 0.4s ease; }
         #thanks-overlay.show { display: flex; opacity: 1; }
-        .admin-menu { background: #fff; padding: 40px; border-radius: 30px; width: 500px; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,0.1); }
+        .admin-menu { background: #fff; padding: 40px; border-radius: 30px; width: 480px; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,0.1); }
         .admin-btn { width: 100%; padding: 18px; margin: 5px 0; border: 1px solid #ddd; background: #fff; font-weight: 700; border-radius: 15px; cursor: pointer; }
     </style>
 </head>
@@ -125,27 +134,27 @@
         <div id="thanks-overlay">
             <div style="font-size: 70px;">✓</div>
             <h2 style="font-size: 32px; font-weight: 900;">THANK YOU</h2>
-            <p style="font-size: 16px; color: var(--text-sub);">ご投票ありがとうございました</p>
+            <p>ご投票ありがとうございました</p>
         </div>
     </div>
 
     <div class="control-pane ui-part">
         <div style="flex:1; display:flex; flex-direction:column; min-height:0;">
             <section class="section" id="section-base">
-                <span class="section-label">01. SELECT BODY COLOR <small style="color:var(--text-sub); font-weight:400;">本体カラーを選択</small></span>
+                <span class="section-label">01. SELECT BODY COLOR</span>
                 <div class="grid-colors" id="base-options"></div>
             </section>
             <section class="section locked" id="section-cover">
-                <span class="section-label">02. CHOOSE COVER <small style="color:var(--text-sub); font-weight:400;">カバーを選択</small></span>
+                <span class="section-label">02. CHOOSE COVER</span>
                 <div class="grid-covers" id="cover-options"></div>
             </section>
-            <span class="section-label">COMMUNITY <small style="color:var(--text-sub); font-weight:400;">みんなのEGG MOUSE</small></span>
+            <span class="section-label" style="margin-top:5px;">COMMUNITY</span>
             <div id="community-area" class="community-area-box"></div>
-            <div style="font-size:10px; color:var(--text-sub); text-align:right; margin-top:5px; font-weight:700;">最新の20件 <small>(Latest 20 posts)</small></div>
         </div>
         <div id="btn-container">
-            <div id="cover-alert" class="alert-text">カバーを選んでください <small>(Please choose a cover)</small></div>
-            <button id="submitBtn" class="submit-btn" onclick="handlePostAction()" disabled><span>POST NOW</span><small style="font-weight:400; font-size:11px;">投稿する</small></button>
+            <div id="cover-alert" class="alert-text">カバーを選んでください (Please choose a cover)</div>
+            <button id="submitBtn" class="submit-btn" onclick="handlePostAction()" disabled><span>POST NOW</span><small style="font-weight:400; font-size:10px;">投稿する</small></button>
+            <div style="font-size:9px; color:var(--text-sub); text-align:right; margin-top:8px; font-weight:700; letter-spacing:0.05em;">Latest 20 posts</div>
         </div>
     </div>
 </div>
@@ -158,7 +167,7 @@
             <p style="font-size:14px; color:var(--text-sub); margin-bottom:30px;">アンケートにご協力ください（任意）<br>Please help us with our survey (Optional)</p>
             <div id="age-chips"><span class="section-label">年齢 Age</span><div class="chip" onclick="setSurvey('age','30歳未満')">30歳未満 (Under 30)</div><div class="chip" onclick="setSurvey('age','30代')">30代 (30s)</div><div class="chip" onclick="setSurvey('age','40代')">40代 (40s)</div><div class="chip" onclick="setSurvey('age','50歳以上')">50歳以上 (Over 50)</div><div class="chip" onclick="setSurvey('age','選択しない')">選択しない (N/A)</div></div>
             <div id="gender-chips" style="margin-top:20px;"><span class="section-label">性別 Gender</span><div class="chip" onclick="setSurvey('gender','男性')">男性 (Male)</div><div class="chip" onclick="setSurvey('gender','女性')">女性 (Female)</div><div class="chip" onclick="setSurvey('gender','選択しない')">選択しない (N/A)</div></div>
-            <div style="font-size:11px; color:var(--text-sub); line-height:1.5; margin:25px 0 15px; padding:18px; background:#f2f2f7; border-radius:15px;">【個人情報の取り扱い】ご入力いただいた情報は匿名化して集計し統計データとしてのみ活用いたします。[Privacy Policy] Your data will be anonymized and used only for statistical purposes.</div>
+            <div style="font-size:11px; color:var(--text-sub); line-height:1.5; margin:25px 0 15px; padding:18px; background:#f2f2f7; border-radius:15px;">【個人情報の取り扱い】ご入力いただいた情報は統計データとして活用し、特定の個人を識別する目的では使用いたしません。[Privacy Policy] Anonymized for statistics.</div>
             <label style="display:flex; align-items:center; gap:12px; font-weight:700; margin-bottom:30px; cursor:pointer;"><input type="checkbox" id="agree-cb" style="width:24px; height:24px; accent-color:#000;" onchange="updateFinalBtn()"><span>同意して投稿する Agree and Post</span></label>
             <div style="display:flex; gap:15px;"><button class="submit-btn" style="background:#eee; color:#000; flex:1;" onclick="hideSurvey()">戻る Back</button><button id="finalPostBtn" class="submit-btn" style="flex:2;" onclick="executeFinalPost()" disabled>POST NOW</button></div>
         </div>
@@ -177,7 +186,7 @@
 </div>
 
 <script>
-    const CONFIG = { storageKey: 'booth_v94_data', settingsKey: 'booth_v94_set', inactivityLimit: 60000, baseCount: 5, coverMax: 10 };
+    const CONFIG = { storageKey: 'booth_v95_data', settingsKey: 'booth_v95_set', inactivityLimit: 60000, baseCount: 5, coverMax: 10 };
     let communityItems = [], inactivityTimer, isSaverActive = false, grabbedItem = null;
     let selectedBase = null, selectedCover = null, validCoverIdsForRandom = [];
     let surveyInput = { age: '', gender: '' }, isSurveyEnabled = true;
@@ -192,7 +201,7 @@
         const cc = document.getElementById('cover-options');
         for(let i=0; i<=CONFIG.coverMax; i++){
             const itm = document.createElement('div'); itm.className='cover-item';
-            if(i===0){ itm.innerHTML=`<span style="font-weight:900;font-size:11px;text-align:center;">REMOVE<br>COVER</span>`; itm.onclick=()=>selectCover(i); cc.appendChild(itm); }
+            if(i===0){ itm.innerHTML=`<span style="font-weight:900;font-size:10px;text-align:center;">REMOVE<br>COVER</span>`; itm.onclick=()=>selectCover(i); cc.appendChild(itm); }
             else {
                 const img = new Image(); img.src=`image/cover_${i}.png`; img.className='cover-thumb';
                 img.onload=()=>{ itm.appendChild(img); itm.onclick=()=>selectCover(i); cc.appendChild(itm); validCoverIdsForRandom.push(i); };
@@ -203,8 +212,7 @@
         requestAnimationFrame(updateAnimation);
         resetInactivityTimer();
         [document.getElementById('community-area'), document.getElementById('saver-layer')].forEach(a => a.addEventListener('pointerdown', onPointerDown));
-        window.addEventListener('pointermove', onPointerMove);
-        window.addEventListener('pointerup', onPointerUp);
+        window.addEventListener('pointermove', onPointerMove); window.addEventListener('pointerup', ()=>grabbedItem=null);
     }
 
     function handlePostAction() { if (isSurveyEnabled) showSurvey(); else executeFinalPost(); }
@@ -225,15 +233,15 @@
         selectedBase = id; document.getElementById('img-default').style.opacity='0'; 
         const p = document.getElementById('main-preview'); p.style.opacity='1'; p.classList.remove('rise', 'fly');
         document.querySelectorAll('.color-dot').forEach((el,idx)=>el.classList.toggle('active', (idx+1)===id));
-        const cs = document.getElementById('section-cover'); cs.classList.remove('locked'); triggerBounce(cs);
+        document.getElementById('section-cover').classList.remove('locked'); triggerBounce(document.getElementById('section-cover'));
         document.getElementById('cover-alert').classList.add('show'); updatePreview();
     }
     function selectCover(id){
-        if(!selectedBase) return; const prev = selectedCover; selectedCover = id;
+        if(!selectedBase) return; selectedCover = id;
         document.querySelectorAll('.cover-item').forEach(el=>{ const isNone=el.innerText.includes('REMOVE')&&id===0; const hasMatch=el.querySelector('img')&&el.querySelector('img').src.includes(`cover_${id}.png`); el.classList.toggle('active', isNone||hasMatch); });
         document.getElementById('submitBtn').disabled = (id===0);
         document.getElementById('cover-alert').classList.toggle('show', id===0);
-        if(id!==0 && prev!==id) triggerBounce(document.getElementById('btn-container')); updatePreview();
+        if(id!==0) triggerBounce(document.getElementById('btn-container')); updatePreview();
     }
     function triggerBounce(el){ el.classList.remove('unlocking'); void el.offsetWidth; el.classList.add('unlocking'); }
     function resetUIState(){
@@ -241,7 +249,6 @@
         selectedBase=null; selectedCover=null; surveyInput={age:'', gender:''}; document.getElementById('img-default').style.opacity='1';
         document.querySelectorAll('.color-dot, .cover-item, .chip').forEach(el=>el.classList.remove('active')); document.getElementById('agree-cb').checked=false;
         document.getElementById('section-cover').classList.add('locked'); document.getElementById('submitBtn').disabled=true; document.getElementById('cover-alert').classList.remove('show');
-        setTimeout(()=>p.classList.add('animate-on'), 50);
     }
 
     function showSurvey(){
@@ -278,10 +285,8 @@
         grabbedItem.vx = (tx - grabbedItem.x) * 0.8; grabbedItem.vy = (ty - grabbedItem.y) * 0.8;
         grabbedItem.x = tx; grabbedItem.y = ty;
     }
-    function onPointerUp(){ grabbedItem=null; }
-
     function updateAnimation(){
-        const lx=isSaverActive?94:92, ly=isSaverActive?92:85, md=isSaverActive?9:6.5; 
+        const lx=isSaverActive?94:92, ly=isSaverActive?92:82, md=isSaverActive?9:6.5; 
         for(let i=0; i<communityItems.length; i++){
             for(let j=i+1; j<communityItems.length; j++){
                 const a=communityItems[i], b=communityItems[j]; if(a===grabbedItem||b===grabbedItem)continue;
@@ -291,8 +296,7 @@
         }
         communityItems.forEach(i=>{
             if(i !== grabbedItem){ 
-                i.x+=(i.dx+i.vx); i.y+=(i.dy+i.vy); i.rot+=i.dr; 
-                i.vx*=0.97; i.vy*=0.97; i.dr*=0.95; 
+                i.x+=(i.dx+i.vx); i.y+=(i.dy+i.vy); i.rot+=i.dr; i.vx*=0.97; i.vy*=0.97; i.dr*=0.95; 
                 if(isNaN(i.x)||isNaN(i.y)){ i.x=Math.random()*80; i.y=Math.random()*80; i.vx=0; i.vy=0; }
                 if(i.x<0){ i.x=0; i.dx=Math.abs(i.dx); i.vx*=-0.8; } else if(i.x>lx){ i.x=lx; i.dx=-Math.abs(i.dx); i.vx*=-0.8; }
                 if(i.y<0){ i.y=0; i.dy=Math.abs(i.dy); i.vy*=-0.8; } else if(i.y>ly){ i.y=ly; i.dy=-Math.abs(i.dy); i.vy*=-0.8; } 
@@ -303,15 +307,13 @@
     }
     function resetInactivityTimer(){ clearTimeout(inactivityTimer); inactivityTimer=setTimeout(()=>startSaver(), CONFIG.inactivityLimit); }
     function startSaver(){ 
-        if(isSaverActive)return; 
-        isSaverActive=true; 
+        if(isSaverActive)return; isSaverActive=true; 
         document.body.classList.add('saver-active'); 
         communityItems.forEach(i => document.getElementById('saver-layer').appendChild(i.el)); 
         const g = document.getElementById('saver-guide'); g.style.opacity = 1; g.style.pointerEvents = 'auto';
     }
     function stopSaver(e){ 
-        if(e) e.stopPropagation(); 
-        isSaverActive = false; 
+        if(e) e.stopPropagation(); isSaverActive = false; 
         document.body.classList.remove('saver-active'); 
         communityItems.forEach(i => document.getElementById('community-area').appendChild(i.el)); 
         const g = document.getElementById('saver-guide'); g.style.opacity = 0; g.style.pointerEvents = 'none';
@@ -321,7 +323,7 @@
     function loadCommunity(it){ if(it){ for(let i=0; i<5; i++){ if(validCoverIdsForRandom.length) addCommunityItem(Math.floor(Math.random()*5)+1, validCoverIdsForRandom[Math.floor(Math.random()*validCoverIdsForRandom.length)], true); } } }
     function addCommunityItem(b,c,i){ 
         const el=document.createElement('div'); el.className='community-item'; if(!i) el.classList.add('new-arrival'); 
-        el.innerHTML=`<img src="image/base_${b}.png" style="width:100%;position:absolute;"><img src="image/cover_${c}.png" style="width:100%;position:absolute;opacity:${c===0?0:1}" onerror="this.style.opacity=0">`; 
+        el.innerHTML=`<img src="image/base_${b}.png" style="width:100%;position:absolute;"><img src="image/cover_${c}.png" style="width:100%;position:absolute;opacity:${c===0?0:1}">`; 
         const r=Math.random()*360; el.style.setProperty('--base-rot', r+'deg'); 
         const it={el,x:Math.random()*80+5,y:Math.random()*70+5,rot:r,dx:(Math.random()-0.5)*0.06,dy:(Math.random()-0.5)*0.06,dr:0,vx:0,vy:0}; 
         (isSaverActive ? document.getElementById('saver-layer') : document.getElementById('community-area')).appendChild(el); 
