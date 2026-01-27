@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>ELECOM EGG MOUSE SIMULATOR</title>
+    <title>Booth Posting Tool v107</title>
     <style>
         :root {
             --primary-bg: #f8f8f8; --panel-bg: #ffffff; --border: #e5e5ea;
@@ -29,7 +29,6 @@
         .preview-outer { flex: 1; display: flex; justify-content: center; align-items: center; position: relative; width: 100%; height: 100%; }
         .default-img { position: absolute; width: 60%; max-height: 40%; object-fit: contain; z-index: 1; transition: opacity 0.8s ease; }
         
-        /* プレビュー中央固定 */
         .preview-wrapper { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1); height: 55%; aspect-ratio: 179 / 232; display: flex; justify-content: center; align-items: center; z-index: 2; opacity: 0; }
         .preview-wrapper.animate-on { transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55), opacity: 0.4s ease, filter 0.5s ease; }
         .preview-wrapper.rise { transform: translate(-50%, -65%) scale(1.15); opacity: 1 !important; filter: drop-shadow(0 30px 20px rgba(0,0,0,0.15)); }
@@ -76,8 +75,10 @@
         .submit-btn { width: 100%; padding: 22px; background: #000; color: #fff; border: none; border-radius: 20px; font-size: 18px; font-weight: 800; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .submit-btn:disabled { background: var(--disabled); color: #8e8e93; }
 
+        /* モーダル：確実に最前面へ */
         .overlay { position: fixed; inset: 0; background: var(--overlay-dim); z-index: 50000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.4s ease; }
         .overlay.show { display: flex; opacity: 1; }
+        
         .survey-card { background: #fff; width: 90%; max-width: 1050px; height: 85%; border-radius: 40px; overflow: hidden; display: grid; grid-template-columns: 1fr 1.2fr; box-shadow: 0 40px 100px rgba(0,0,0,0.3); }
         .survey-preview { background: #f9f9f9; display: flex; justify-content: center; align-items: center; padding: 60px; position: relative; }
         .survey-form { padding: 40px 50px; display: flex; flex-direction: column; justify-content: center; overflow-y: auto; }
@@ -86,6 +87,8 @@
 
         #thanks-overlay { position: absolute; inset: 0; background: rgba(255,255,255,0.95); display: none; justify-content: center; align-items: center; z-index: 100; flex-direction: column; opacity: 0; transition: opacity 0.4s ease; }
         #thanks-overlay.show { display: flex; opacity: 1; }
+        
+        /* 設定画面 */
         .admin-menu { background: #fff; padding: 40px; border-radius: 30px; width: 500px; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,0.1); }
         .admin-btn { width: 100%; padding: 18px; margin: 5px 0; border: 1px solid #ddd; background: #fff; font-weight: 700; border-radius: 15px; cursor: pointer; }
     </style>
@@ -118,8 +121,8 @@
     </div>
     <div class="control-pane ui-part">
         <div style="flex:1; display:flex; flex-direction:column; min-height:0;">
-            <section class="section" id="section-base"><span class="section-label">01. SELECT BODY COLOR  <small>(本体色を選択してください)</small></span><div class="grid-colors" id="base-options"></div></section>
-            <section class="section locked" id="section-cover"><span class="section-label">02. CHOOSE COVER  <small>(カバーを選択してください)</small></span><div class="grid-covers" id="cover-options"></div></section>
+            <section class="section" id="section-base"><span class="section-label">01. SELECT BODY COLOR <small>(本体色を選択してください)</small></span><div class="grid-colors" id="base-options"></div></section>
+            <section class="section locked" id="section-cover"><span class="section-label">02. CHOOSE COVER <small>(カバーを選択してください)</small></span><div class="grid-covers" id="cover-options"></div></section>
             <span class="section-label">COMMUNITY <small>(みんなのEGG MOUSE)</small></span><div id="community-area" class="community-area-box"></div>
             <div style="font-size:10px; color:var(--text-sub); text-align:right; margin-top:5px; font-weight:600;">Latest 20 posts <small>(最新の20件)</small></div>
         </div>
@@ -159,7 +162,7 @@
 </div>
 
 <script>
-    const CONFIG = { storageKey: 'booth_v106_data', settingsKey: 'booth_v106_set', inactivityLimit: 60000, baseCount: 5, coverMax: 10 };
+    const CONFIG = { storageKey: 'booth_v107_data', settingsKey: 'booth_v107_set', inactivityLimit: 60000, baseCount: 5, coverMax: 10 };
     let communityItems = [], inactivityTimer, isSaverActive = false, grabbedItem = null;
     let selectedBase = null, selectedCover = null, validCoverIdsForRandom = [];
     let surveyInput = { age: '', gender: '' }, isSurveyEnabled = true;
@@ -189,6 +192,7 @@
     }
 
     function handlePostAction() { if (isSurveyEnabled) showSurvey(); else executeFinalPost(); }
+    
     function executeFinalPost() {
         document.getElementById('global-guard').style.display = 'block';
         if (isSurveyEnabled) hideSurvey();
@@ -241,7 +245,16 @@
     function setSurvey(k,v){ surveyInput[k]=v; document.querySelectorAll(`#${k}-chips .chip`).forEach(c=>c.classList.toggle('active', c.innerText.includes(v))); }
     function updateFinalBtn(){ document.getElementById('finalPostBtn').disabled = !document.getElementById('agree-cb').checked; }
 
-    function openAdmin(){ const set = JSON.parse(localStorage.getItem(CONFIG.settingsKey) || '{"pw":"1234"}'); if(prompt("PW")===set.pw) document.getElementById('admin-overlay').classList.add('show'); }
+    // 修正ポイント：管理者認証と表示
+    function openAdmin(){
+        const set = JSON.parse(localStorage.getItem(CONFIG.settingsKey) || '{"pw":"1234"}');
+        const pw = prompt("Password");
+        if(pw === set.pw) {
+            document.getElementById('admin-overlay').classList.add('show');
+        } else if(pw !== null) {
+            alert("Incorrect password");
+        }
+    }
     function closeAdmin(){ document.getElementById('admin-overlay').classList.remove('show'); }
     function toggleSurveySetting(){ isSurveyEnabled=!isSurveyEnabled; const s = JSON.parse(localStorage.getItem(CONFIG.settingsKey)||'{}'); s.survey=isSurveyEnabled; localStorage.setItem(CONFIG.settingsKey, JSON.stringify(s)); updateSurveyUI(); }
     function updateSurveyUI(){ const l=document.getElementById('survey-status-label'); l.innerText=isSurveyEnabled?'ON':'OFF'; l.style.color=isSurveyEnabled?'#34c759':'#8e8e93'; }
@@ -295,7 +308,7 @@
         (isSaverActive ? document.getElementById('saver-layer') : document.getElementById('community-area')).appendChild(el); communityItems.push(it);
     }
     function downloadCSV(){ const d = JSON.parse(localStorage.getItem(CONFIG.storageKey)||'[]'); const csv = "\ufeffTime,Base,Cover,Age,Gender\n" + d.map(i=>`${i.t},${i.b},${i.c},${i.age},${i.gen}`).join("\n"); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); a.download = `booth_results.csv`; a.click(); }
-    function resetData(){ if(confirm("Reset ALL data and Community?")) { localStorage.removeItem(CONFIG.storageKey); communityItems.forEach(i => i.el.remove()); communityItems = []; location.reload(); } }
+    function resetData(){ if(confirm("Reset ALL data?")) { localStorage.removeItem(CONFIG.storageKey); communityItems.forEach(i => i.el.remove()); communityItems = []; location.reload(); } }
     init();
 </script>
 </body>
