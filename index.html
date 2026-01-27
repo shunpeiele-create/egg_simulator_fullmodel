@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Booth Posting Tool v92 - Final Design</title>
+    <title>Booth Posting Tool v93</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
-    
+
     <style>
         :root {
             --primary-bg: #f8f8f8;
@@ -22,7 +22,6 @@
             --overlay-dim: rgba(0,0,0,0.4);
         }
 
-        /* フォントの指定：英語にFutura、日本語に源ノ角(Noto Sans JP)を適用 */
         * { 
             box-sizing: border-box; 
             -webkit-tap-highlight-color: transparent; 
@@ -31,64 +30,67 @@
             font-family: "futura-pt", Futura, "Source Han Sans JP", "Noto Sans JP", sans-serif;
         }
         
-        body { margin: 0; padding: 0; background: var(--primary-bg); overflow: hidden; height: 100vh; width: 100vw; }
+        body { margin: 0; padding: 0; background: var(--primary-bg); overflow: hidden; height: 100vh; width: 100vw; position: fixed; }
 
         .manual-saver-trigger { position: fixed; top: 0; left: 0; width: 80px; height: 80px; z-index: 10000; cursor: pointer; }
         .admin-trigger { position: absolute; top: 15px; right: 15px; width: 50px; height: 50px; background: none; border: none; cursor: pointer; font-size: 28px; color: #eee; z-index: 15000; display: flex; justify-content: center; align-items: center; }
 
-        .app-grid { display: grid; grid-template-columns: 1.8fr 1.2fr; height: 100vh; width: 100vw; position: relative; }
-        .preview-pane { background: #fff; border-right: 1px solid var(--border); position: relative; display: flex; flex-direction: column; overflow: hidden; z-index: 10; height: 100%; }
-        .control-pane { background: var(--panel-bg); padding: 60px 50px 40px; display: flex; flex-direction: column; position: relative; z-index: 10; height: 100vh; }
+        /* レイアウトGrid：1.8 : 1.2 比率を固定 */
+        .app-grid { display: grid; grid-template-columns: 1.8fr 1.2fr; height: 100vh; width: 100vw; }
         
-        .ui-part { transition: 0.4s; opacity: 1; }
-        .saver-active .ui-part { opacity: 0; pointer-events: none; }
-
+        /* 左パネル：プレビュー */
+        .preview-pane { background: #fff; border-right: 1px solid var(--border); position: relative; display: flex; flex-direction: column; overflow: hidden; }
         .title-area { position: absolute; top: 60px; left: 0; width: 100%; height: 60px; display: flex; justify-content: center; z-index: 20; pointer-events: none; }
-        .preview-outer { flex: 1; display: flex; justify-content: center; align-items: center; position: relative; }
-        .default-img { position: absolute; width: 60%; max-height: 40%; object-fit: contain; z-index: 1; transition: opacity 0.8s ease; }
+        .title-img { max-width: 85%; object-fit: contain; }
         
-        /* 飛行エフェクト：連動Keyframes */
-        .preview-wrapper { position: relative; height: 50%; aspect-ratio: 179 / 232; display: flex; justify-content: center; align-items: center; z-index: 2; opacity: 0; transform: translateY(0) scale(1); }
-        .preview-wrapper.animate-on { transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55), opacity: 0.4s ease, filter 0.5s ease; }
-        .preview-wrapper.rise { transform: scale(1.15) translateY(-30px); opacity: 1 !important; filter: drop-shadow(0 30px 20px rgba(0,0,0,0.15)); }
+        .preview-outer { flex: 1; display: flex; justify-content: center; align-items: center; position: relative; width: 100%; }
+        .default-img { position: absolute; width: 55%; max-height: 40%; object-fit: contain; z-index: 1; transition: opacity 0.8s ease; }
+        
+        .preview-wrapper { position: absolute; height: 50%; aspect-ratio: 179 / 232; display: flex; justify-content: center; align-items: center; z-index: 2; opacity: 0; }
+        .preview-wrapper.animate-on { transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55), opacity: 0.4s ease; }
+        .preview-wrapper.rise { transform: translateY(-30px) scale(1.15); opacity: 1 !important; filter: drop-shadow(0 30px 20px rgba(0,0,0,0.15)); }
 
         @keyframes snapLaunch {
-            0% { transform: scale(1.15) translateY(-30px); opacity: 1; }
-            15% { transform: scale(1.0) translateY(20px); opacity: 1; }
-            30% { transform: scale(1.2) translateY(-60px); opacity: 1; }
-            100% { transform: scale(0.2) translateY(-150vh); opacity: 0; }
+            0% { transform: translateY(-30px) scale(1.15); opacity: 1; }
+            15% { transform: translateY(20px) scale(1.0); opacity: 1; }
+            30% { transform: translateY(-60px) scale(1.2); opacity: 1; }
+            100% { transform: translateY(-150vh) scale(0.2); opacity: 0; }
         }
         .preview-wrapper.fly { animation: snapLaunch 1.1s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards !important; }
 
         .layer { position: absolute; width: 100%; height: 100%; object-fit: contain; transition: 0.4s ease; }
 
-        .section { margin-bottom: 25px; }
+        /* 右パネル：操作系 */
+        .control-pane { background: var(--panel-bg); padding: 60px 40px 40px; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .scroll-area { flex: 1; overflow-y: auto; padding-right: 5px; }
+
+        .section { margin-bottom: 30px; }
         .section.locked { opacity: 0.15; pointer-events: none; }
-        @keyframes unlockBounce { 0%, 100% {transform:translateY(0)} 30% {transform:translateY(-8px)} }
-        .unlocking { animation: unlockBounce 0.5s ease; }
         .section-label { font-size: 15px; font-weight: 900; color: #000; margin-bottom: 12px; display: block; letter-spacing: 0.05em; }
+        
         .grid-colors { display: flex; gap: 16px; flex-wrap: wrap; }
-        .color-dot { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border); overflow: hidden; background-size: 180%; background-position: center 10%; cursor: pointer; position: relative; }
+        .color-dot { width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--border); overflow: hidden; background-size: 180%; background-position: center 10%; cursor: pointer; position: relative; }
         .color-dot.active::after { content: ''; position: absolute; inset: 0; border: 3px solid #000; border-radius: 50%; }
-        .grid-covers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .cover-item { aspect-ratio: 1.25; border: 1px solid var(--border); border-radius: 12px; background: #fff; display: flex; justify-content: center; align-items: center; padding: 10px; cursor: pointer; }
+        
+        .grid-covers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .cover-item { aspect-ratio: 1.2; border: 1px solid var(--border); border-radius: 12px; background: #fff; display: flex; justify-content: center; align-items: center; padding: 8px; cursor: pointer; }
         .cover-item.active { border: 2.5px solid #000; background: #fafafa; }
 
-        .community-area-box { flex: 1; position: relative; overflow: hidden; background: #fcfcfc; border-radius: 20px; border: 1px dashed var(--border); cursor: grab; touch-action: none; z-index: 5; }
+        .community-area-box { height: 180px; position: relative; overflow: hidden; background: #fcfcfc; border-radius: 20px; border: 1px dashed var(--border); cursor: grab; touch-action: none; margin-bottom: 20px; }
         #saver-layer { position: fixed; inset: 0; background: #fff; z-index: 9000; display: none; cursor: grab; }
         body.saver-active #saver-layer { display: block; }
-        .community-item { position: absolute; width: 34px; height: 44px; pointer-events: none; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); will-change: left, top, transform; }
-        .saver-active .community-item { width: 80px; height: 104px; transition: width 0.8s, height 0.8s; }
+        .community-item { position: absolute; width: 34px; height: 44px; pointer-events: none; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
+        .saver-active .community-item { width: 80px; height: 104px; }
         
         #saver-guide { position: fixed; bottom: 50px; right: 50px; width: 400px; opacity: 0; transition: 0.5s; z-index: 11000; pointer-events: none; cursor: pointer; }
 
-        .submit-btn { width: 100%; padding: 22px; background: #000; color: #fff; border: none; border-radius: 20px; font-size: 19px; font-weight: 900; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; letter-spacing: 0.08em; }
+        .submit-btn { width: 100%; padding: 24px; background: #000; color: #fff; border: none; border-radius: 20px; font-size: 20px; font-weight: 900; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; }
         .submit-btn:disabled { background: var(--disabled); color: #8e8e93; }
 
         .overlay { position: fixed; inset: 0; background: var(--overlay-dim); z-index: 50000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.4s ease; }
         .overlay.show { display: flex; opacity: 1; }
         .survey-card { background: #fff; width: 90%; max-width: 1050px; height: 85%; border-radius: 40px; overflow: hidden; display: grid; grid-template-columns: 1fr 1.2fr; }
-        .survey-preview { background: #f9f9f9; display: flex; justify-content: center; align-items: center; padding: 60px; }
+        .survey-preview { background: #f9f9f9; display: flex; justify-content: center; align-items: center; padding: 60px; position: relative; }
         .survey-form { padding: 40px 50px; display: flex; flex-direction: column; justify-content: center; overflow-y: auto; }
         .chip { padding: 14px 20px; border: 1px solid var(--border); border-radius: 12px; background: #fff; font-weight: 700; cursor: pointer; font-size: 13px; margin: 0 8px 8px 0; display: inline-block; }
         .chip.active { background: #000; color: #fff; }
@@ -105,7 +107,7 @@
 <div class="manual-saver-trigger" onclick="startSaver()"></div>
 
 <div id="saver-layer" onpointerdown="onPointerDown(event)">
-    <img id="saver-bg-img" src="image/saver_bg.png" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); max-width:60%; opacity:0.05; pointer-events:none;" onerror="this.style.display='none'">
+    <img id="saver-bg-img" src="image/saver_bg.png" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); max-width:60%; opacity:0.05; pointer-events:none;">
 </div>
 <img id="saver-guide" src="image/guide.png" onpointerdown="stopSaver(event)" onerror="this.style.display='none'">
 
@@ -121,26 +123,25 @@
         <div id="thanks-overlay">
             <div style="font-size: 70px;">✓</div>
             <h2 style="font-size: 32px; font-weight: 900;">THANK YOU</h2>
-            <p style="font-size: 16px; color: var(--text-sub);">ご投票ありがとうございました</p>
+            <p>ご投票ありがとうございました</p>
         </div>
     </div>
 
     <div class="control-pane ui-part">
-        <div style="flex:1; display:flex; flex-direction:column; min-height:0;">
+        <div class="scroll-area">
             <section class="section" id="section-base">
-                <span class="section-label">01. SELECT BODY COLOR <small style="color:var(--text-sub); font-weight:400;">本体カラーを選択</small></span>
+                <span class="section-label">01. SELECT BODY COLOR</span>
                 <div class="grid-colors" id="base-options"></div>
             </section>
             <section class="section locked" id="section-cover">
-                <span class="section-label">02. CHOOSE COVER <small style="color:var(--text-sub); font-weight:400;">カバーを選択</small></span>
+                <span class="section-label">02. CHOOSE COVER</span>
                 <div class="grid-covers" id="cover-options"></div>
             </section>
-            <span class="section-label">COMMUNITY <small style="color:var(--text-sub); font-weight:400;">みんなのEGG MOUSE</small></span>
+            <span class="section-label">COMMUNITY</span>
             <div id="community-area" class="community-area-box"></div>
-            <div style="font-size:10px; color:var(--text-sub); text-align:right; margin-top:5px; font-weight:700;">最新の20件 (Latest 20 posts)</div>
         </div>
         <div id="btn-container">
-            <div id="cover-alert" class="alert-text">カバーを選んでください <small>(Please choose a cover)</small></div>
+            <div id="cover-alert" class="alert-text">カバーを選んでください (Please choose a cover)</div>
             <button id="submitBtn" class="submit-btn" onclick="handlePostAction()" disabled><span>POST NOW</span><small style="font-size:11px; font-weight:400;">投稿する</small></button>
         </div>
     </div>
@@ -150,13 +151,13 @@
     <div class="survey-card">
         <div class="survey-preview" id="survey-clone-target"></div>
         <div class="survey-form">
-            <h2 style="font-size:32px; font-weight:900; margin-bottom:5px;">This is your EGG MOUSE!</h2>
-            <p style="font-size:14px; color:var(--text-sub); margin-bottom:30px;">アンケートにご協力ください（任意）<br>Please help us with our survey (Optional)</p>
-            <div id="age-chips"><span class="section-label">年齢 Age</span><div class="chip" onclick="setSurvey('age','30歳未満')">30歳未満 (Under 30)</div><div class="chip" onclick="setSurvey('age','30代')">30代 (30s)</div><div class="chip" onclick="setSurvey('age','40代')">40代 (40s)</div><div class="chip" onclick="setSurvey('age','50歳以上')">50歳以上 (Over 50)</div><div class="chip" onclick="setSurvey('age','選択しない')">選択しない (N/A)</div></div>
-            <div id="gender-chips" style="margin-top:20px;"><span class="section-label">性別 Gender</span><div class="chip" onclick="setSurvey('gender','男性')">男性 (Male)</div><div class="chip" onclick="setSurvey('gender','女性')">女性 (Female)</div><div class="chip" onclick="setSurvey('gender','選択しない')">選択しない (N/A)</div></div>
-            <div style="font-size:11px; color:var(--text-sub); line-height:1.5; margin:25px 0 15px; padding:18px; background:#f2f2f7; border-radius:15px;">【個人情報の取り扱い】ご入力いただいた情報は匿名化して集計し統計データとしてのみ活用いたします。[Privacy Policy] Your data will be anonymized and used only for statistical purposes.</div>
-            <label style="display:flex; align-items:center; gap:12px; font-weight:700; margin-bottom:30px; cursor:pointer;"><input type="checkbox" id="agree-cb" style="width:24px; height:24px; accent-color:#000;" onchange="updateFinalBtn()"><span>同意して投稿する Agree and Post</span></label>
-            <div style="display:flex; gap:15px;"><button class="submit-btn" style="background:#eee; color:#000; flex:1;" onclick="hideSurvey()">戻る Back</button><button id="finalPostBtn" class="submit-btn" style="flex:2;" onclick="executeFinalPost()" disabled>POST NOW</button></div>
+            <h2 style="font-size:32px; font-weight:900;">Help us with our survey!</h2>
+            <p style="font-size:14px; color:var(--text-sub); margin-bottom:30px;">アンケートにご協力ください（任意）</p>
+            <div id="age-chips"><span class="section-label">年齢 Age</span><div class="chip" onclick="setSurvey('age','30歳未満')">30歳未満</div><div class="chip" onclick="setSurvey('age','30代')">30代</div><div class="chip" onclick="setSurvey('age','40代')">40代</div><div class="chip" onclick="setSurvey('age','50歳以上')">50歳以上</div></div>
+            <div id="gender-chips" style="margin-top:20px;"><span class="section-label">性別 Gender</span><div class="chip" onclick="setSurvey('gender','男性')">男性</div><div class="chip" onclick="setSurvey('gender','女性')">女性</div></div>
+            <div style="font-size:11px; color:var(--text-sub); margin:20px 0;">[Privacy Policy] Data used only for statistics.</div>
+            <label style="display:flex; align-items:center; gap:12px; font-weight:700; margin-bottom:30px;"><input type="checkbox" id="agree-cb" style="width:24px; height:24px;" onchange="updateFinalBtn()"><span>同意して投稿する Agree and Post</span></label>
+            <div style="display:flex; gap:15px;"><button class="submit-btn" style="background:#eee; color:#000; flex:1;" onclick="hideSurvey()">Back</button><button id="finalPostBtn" class="submit-btn" style="flex:2;" onclick="executeFinalPost()" disabled>POST NOW</button></div>
         </div>
     </div>
 </div>
@@ -164,23 +165,21 @@
 <div id="admin-overlay" class="overlay">
     <div class="admin-menu">
         <h2 style="margin-bottom:25px">ADMIN SETTINGS</h2>
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:15px 20px; background:#f2f2f7; border-radius:15px; margin-bottom:15px; cursor:pointer;" onclick="toggleSurveySetting()"><span>Survey Form</span><span id="survey-status-label" style="font-weight:900;">ON</span></div>
         <button onclick="downloadCSV()" class="admin-btn">CSV DOWNLOAD</button>
         <button onclick="changePW()" class="admin-btn">CHANGE PASSWORD</button>
-        <button onclick="resetData()" class="admin-btn" style="color:red; border-color:red;">RESET ALL DATA</button>
-        <button onclick="closeAdmin()" class="admin-btn" style="background:#eee; border:none; margin-top:20px;">CLOSE</button>
+        <button onclick="resetData()" class="admin-btn" style="color:red; border-color:red;">RESET DATA</button>
+        <button onclick="closeAdmin()" class="admin-btn" style="background:#eee; border:none; margin-top:15px;">CLOSE</button>
     </div>
 </div>
 
 <script>
-    const CONFIG = { storageKey: 'booth_v91_data', settingsKey: 'booth_v91_set', inactivityLimit: 60000, baseCount: 5, coverMax: 10 };
+    const CONFIG = { storageKey: 'booth_v93_data', settingsKey: 'booth_v93_set', inactivityLimit: 60000, baseCount: 5, coverMax: 10 };
     let communityItems = [], inactivityTimer, isSaverActive = false, grabbedItem = null;
     let selectedBase = null, selectedCover = null, validCoverIdsForRandom = [];
     let surveyInput = { age: '', gender: '' }, isSurveyEnabled = true;
 
     function init() {
         const set = JSON.parse(localStorage.getItem(CONFIG.settingsKey) || '{"survey":true, "pw":"1234"}');
-        isSurveyEnabled = set.survey; updateSurveyUI();
         const bc = document.getElementById('base-options');
         for(let i=1; i<=CONFIG.baseCount; i++){
             const d = document.createElement('div'); d.className='color-dot'; d.style.backgroundImage=`url(image/base_${i}.png)`; d.onclick=()=>selectBase(i); bc.appendChild(d);
@@ -188,7 +187,7 @@
         const cc = document.getElementById('cover-options');
         for(let i=0; i<=CONFIG.coverMax; i++){
             const itm = document.createElement('div'); itm.className='cover-item';
-            if(i===0){ itm.innerHTML=`<span style="font-weight:900;font-size:11px;text-align:center;">REMOVE<br>COVER</span>`; itm.onclick=()=>selectCover(i); cc.appendChild(itm); }
+            if(i===0){ itm.innerHTML=`<span style="font-weight:900;font-size:10px;">REMOVE</span>`; itm.onclick=()=>selectCover(i); cc.appendChild(itm); }
             else {
                 const img = new Image(); img.src=`image/cover_${i}.png`; img.className='cover-thumb';
                 img.onload=()=>{ itm.appendChild(img); itm.onclick=()=>selectCover(i); cc.appendChild(itm); validCoverIdsForRandom.push(i); };
@@ -220,44 +219,37 @@
         selectedBase = id; document.getElementById('img-default').style.opacity='0'; 
         const p = document.getElementById('main-preview'); p.style.opacity='1'; p.classList.remove('rise', 'fly');
         document.querySelectorAll('.color-dot').forEach((el,idx)=>el.classList.toggle('active', (idx+1)===id));
-        const cs = document.getElementById('section-cover'); cs.classList.remove('locked'); triggerBounce(cs);
-        document.getElementById('cover-alert').classList.add('show'); updatePreview();
+        document.getElementById('section-cover').classList.remove('locked'); updatePreview();
     }
     function selectCover(id){
         if(!selectedBase) return; selectedCover = id;
         document.querySelectorAll('.cover-item').forEach(el=>{ const isNone=el.innerText.includes('REMOVE')&&id===0; const hasMatch=el.querySelector('img')&&el.querySelector('img').src.includes(`cover_${id}.png`); el.classList.toggle('active', isNone||hasMatch); });
         document.getElementById('submitBtn').disabled = (id===0);
-        document.getElementById('cover-alert').classList.toggle('show', id===0);
-        if(id!==0) triggerBounce(document.getElementById('btn-container')); updatePreview();
+        document.getElementById('cover-alert').classList.toggle('show', id===0); updatePreview();
     }
-    function triggerBounce(el){ el.classList.remove('unlocking'); void el.offsetWidth; el.classList.add('unlocking'); }
     function resetUIState(){
-        const p = document.getElementById('main-preview'); p.classList.remove('animate-on'); p.style.opacity='0'; p.classList.remove('rise','fly');
-        selectedBase=null; selectedCover=null; surveyInput={age:'', gender:''}; document.getElementById('img-default').style.opacity='1';
-        document.querySelectorAll('.color-dot, .cover-item, .chip').forEach(el=>el.classList.remove('active')); document.getElementById('agree-cb').checked=false;
-        document.getElementById('section-cover').classList.add('locked'); document.getElementById('submitBtn').disabled=true; document.getElementById('cover-alert').classList.remove('show');
+        const p = document.getElementById('main-preview'); p.style.opacity='0'; p.classList.remove('rise','fly');
+        selectedBase=null; selectedCover=null; document.getElementById('img-default').style.opacity='1';
+        document.querySelectorAll('.color-dot, .cover-item, .chip').forEach(el=>el.classList.remove('active'));
+        document.getElementById('section-cover').classList.add('locked'); document.getElementById('submitBtn').disabled=true;
     }
-
     function showSurvey(){
         const target=document.getElementById('survey-clone-target'); target.innerHTML='';
-        const clone=document.getElementById('main-preview').cloneNode(true); clone.style.opacity='1'; clone.classList.remove('animate-on','rise','fly'); target.appendChild(clone);
+        const clone=document.getElementById('main-preview').cloneNode(true); clone.style.opacity='1'; clone.style.position="relative"; target.appendChild(clone);
         document.getElementById('survey-overlay').classList.add('show');
     }
     function hideSurvey(){ document.getElementById('survey-overlay').classList.remove('show'); }
     function setSurvey(k,v){ surveyInput[k]=v; document.querySelectorAll(`#${k}-chips .chip`).forEach(c=>c.classList.toggle('active', c.innerText.includes(v))); }
     function updateFinalBtn(){ document.getElementById('finalPostBtn').disabled = !document.getElementById('agree-cb').checked; }
-    function openAdmin(){ const set = JSON.parse(localStorage.getItem(CONFIG.settingsKey) || '{"pw":"1234"}'); if(prompt("Password") === set.pw) document.getElementById('admin-overlay').classList.add('show'); }
+    function openAdmin(){ const pw=prompt("PW"); if(pw==="1234") document.getElementById('admin-overlay').classList.add('show'); }
     function closeAdmin(){ document.getElementById('admin-overlay').classList.remove('show'); }
-    function toggleSurveySetting(){ isSurveyEnabled=!isSurveyEnabled; const s = JSON.parse(localStorage.getItem(CONFIG.settingsKey)||'{}'); s.survey=isSurveyEnabled; localStorage.setItem(CONFIG.settingsKey, JSON.stringify(s)); updateSurveyUI(); }
-    function updateSurveyUI(){ const l=document.getElementById('survey-status-label'); l.innerText=isSurveyEnabled?'ON':'OFF'; l.style.color=isSurveyEnabled?'#34c759':'#8e8e93'; }
-    function changePW(){ const n=prompt("New PW"); if(n){ const s = JSON.parse(localStorage.getItem(CONFIG.settingsKey)||'{}'); s.pw=n; localStorage.setItem(CONFIG.settingsKey, JSON.stringify(s)); alert("Changed"); } }
 
     function onPointerDown(e){
         const target = isSaverActive ? document.getElementById('saver-layer') : document.getElementById('community-area');
         const rect = target.getBoundingClientRect();
         const tx = ((e.clientX - rect.left) / rect.width) * 100, ty = ((e.clientY - rect.top) / rect.height) * 100;
         let found = null;
-        communityItems.forEach(i=>{ if(Math.sqrt((tx-i.x)**2+(ty-i.y)**2) < (isSaverActive?4.5:3.5)) found=i; });
+        communityItems.forEach(i=>{ const hr = isSaverActive ? 4.5 : 3.5; if(Math.sqrt((tx-i.x)**2+(ty-i.y)**2) < hr) found=i; });
         if(found){ grabbedItem=found; grabbedItem.vx=0; grabbedItem.vy=0; }
         else { communityItems.forEach(i=>{
             const dx=i.x-tx, dy=i.y-ty, d=Math.sqrt(dx*dx+dy*dy), r=isSaverActive?20:15;
@@ -272,63 +264,37 @@
         grabbedItem.vx = (tx - grabbedItem.x) * 0.8; grabbedItem.vy = (ty - grabbedItem.y) * 0.8;
         grabbedItem.x = tx; grabbedItem.y = ty;
     }
-
     function updateAnimation(){
-        const lx=isSaverActive?94:92, ly=isSaverActive?92:85, md=isSaverActive?9:6.5; 
-        for(let i=0; i<communityItems.length; i++){
-            for(let j=i+1; j<communityItems.length; j++){
-                const a=communityItems[i], b=communityItems[j]; if(a===grabbedItem||b===grabbedItem)continue;
-                const dx=b.x-a.x, dy=b.y-a.y, d = Math.sqrt(dx*dx + dy*dy);
-                if(d < md && d > 0.1){ const ang=Math.atan2(dy,dx), f=(md-d)*0.08; a.vx-=Math.cos(ang)*f; a.vy-=Math.sin(ang)*f; b.vx+=Math.cos(ang)*f; b.vy+=Math.sin(ang)*f; }
-            }
-        }
+        const lx=isSaverActive?94:92, ly=isSaverActive?92:80; 
         communityItems.forEach(i=>{
             if(i !== grabbedItem){ 
                 i.x+=(i.dx+i.vx); i.y+=(i.dy+i.vy); i.rot+=i.dr; 
                 i.vx*=0.97; i.vy*=0.97; i.dr*=0.95; 
-                if(isNaN(i.x)||isNaN(i.y)){ i.x=Math.random()*80; i.y=Math.random()*80; i.vx=0; i.vy=0; }
-                if(i.x<0){ i.x=0; i.dx=Math.abs(i.dx); i.vx*=-0.8; } else if(i.x>lx){ i.x=lx; i.dx=-Math.abs(i.dx); i.vx*=-0.8; }
-                if(i.y<0){ i.y=0; i.dy=Math.abs(i.dy); i.vy*=-0.8; } else if(i.y>ly){ i.y=ly; i.dy=-Math.abs(i.dy); i.vy*=-0.8; } 
+                if(i.x<0||i.x>lx){i.dx*=-1; i.vx*=-0.8;} if(i.y<0||i.y>ly){i.dy*=-1; i.vy*=-0.8;}
             }
             i.el.style.left = i.x + '%'; i.el.style.top = i.y + '%'; i.el.style.transform = `rotate(${i.rot}deg)`;
         });
         requestAnimationFrame(updateAnimation);
     }
     function resetInactivityTimer(){ clearTimeout(inactivityTimer); inactivityTimer=setTimeout(()=>startSaver(), CONFIG.inactivityLimit); }
-    function startSaver(){ 
-        if(isSaverActive)return; 
-        isSaverActive=true; 
-        document.body.classList.add('saver-active'); 
-        communityItems.forEach(i => document.getElementById('saver-layer').appendChild(i.el)); 
-        const g = document.getElementById('saver-guide'); g.style.opacity = 1; g.style.pointerEvents = 'auto';
-    }
-    function stopSaver(e){ 
-        if(e) e.stopPropagation(); 
-        isSaverActive = false; 
-        document.body.classList.remove('saver-active'); 
-        communityItems.forEach(i => document.getElementById('community-area').appendChild(i.el)); 
-        const g = document.getElementById('saver-guide'); g.style.opacity = 0; g.style.pointerEvents = 'none';
-        resetInactivityTimer(); 
-    }
+    function startSaver(){ if(isSaverActive)return; isSaverActive=true; document.body.classList.add('saver-active'); communityItems.forEach(i=>document.getElementById('saver-layer').appendChild(i.el)); document.getElementById('saver-guide').style.opacity=1; document.getElementById('saver-guide').style.pointerEvents='auto'; }
+    function stopSaver(e){ if(e)e.stopPropagation(); isSaverActive=false; document.body.classList.remove('saver-active'); communityItems.forEach(i=>document.getElementById('community-area').appendChild(i.el)); document.getElementById('saver-guide').style.opacity=0; document.getElementById('saver-guide').style.pointerEvents='none'; resetInactivityTimer(); }
     function updatePreview(){ document.getElementById('img-base').src=`image/base_${selectedBase}.png`; const c=document.getElementById('img-cover'); if(selectedCover>0){ c.src=`image/cover_${selectedCover}.png`; c.style.opacity="1"; } else { c.style.opacity="0"; } }
-    function loadCommunity(it){ if(it){ for(let i=0; i<5; i++){ if(validCoverIdsForRandom.length) addCommunityItem(Math.floor(Math.random()*5)+1, validCoverIdsForRandom[Math.floor(Math.random()*validCoverIdsForRandom.length)], true); } } }
+    function loadCommunity(it){ if(it){ for(let i=0; i<5; i++) addCommunityItem(Math.floor(Math.random()*5)+1, validCoverIdsForRandom[Math.floor(Math.random()*validCoverIdsForRandom.length)], true); } }
     function addCommunityItem(b,c,i){ 
         const el=document.createElement('div'); el.className='community-item'; if(!i) el.classList.add('new-arrival'); 
         el.innerHTML=`<img src="image/base_${b}.png" style="width:100%;position:absolute;"><img src="image/cover_${c}.png" style="width:100%;position:absolute;opacity:${c===0?0:1}">`; 
         const r=Math.random()*360; el.style.setProperty('--base-rot', r+'deg'); 
-        const it={el,x:Math.random()*80+5,y:Math.random()*70+5,rot:r,dx:(Math.random()-0.5)*0.06,dy:(Math.random()-0.5)*0.06,dr:0,vx:0,vy:0}; 
+        const it={el,x:Math.random()*80,y:Math.random()*70,rot:r,dx:(Math.random()-0.5)*0.06,dy:(Math.random()-0.5)*0.06,dr:0,vx:0,vy:0}; 
         (isSaverActive ? document.getElementById('saver-layer') : document.getElementById('community-area')).appendChild(el); 
         communityItems.push(it); if(communityItems.length>25) communityItems.shift().el.remove(); 
     }
-    
     function downloadCSV(){
         const d = JSON.parse(localStorage.getItem(CONFIG.storageKey)||'[]');
         const csv = "\ufeffTime,Base,Cover,Age,Gender\n" + d.map(i=>`${i.t},${i.b},${i.c},${i.age},${i.gen}`).join("\n");
         const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
         a.download = `booth_data.csv`; a.click();
     }
-    function resetData(){ if(confirm("Reset ALL data?")) { localStorage.removeItem(CONFIG.storageKey); location.reload(); } }
-    
     init();
 </script>
 </body>
