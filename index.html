@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>EGG MOUSE SIMULATOR v121</title>
+    <title>EGG MOUSE SIMULATOR v123</title>
     
     <link rel="apple-touch-icon" href="image/base_1.png">
     
@@ -31,10 +31,9 @@
         .manual-saver-trigger { position: fixed; top: 0; left: 0; width: 80px; height: 80px; z-index: 10000; cursor: pointer; }
         .admin-trigger { position: absolute; top: 15px; right: 15px; width: 50px; height: 50px; background: none; border: none; cursor: pointer; font-size: 28px; color: #eee; z-index: 15000; display: flex; justify-content: center; align-items: center; }
 
-        /* 修正：右側エリアを少し広く (1.6 : 1 比率) */
         .app-grid { display: grid; grid-template-columns: 1.6fr 1fr; height: 100vh; width: 100vw; position: relative; }
         .preview-pane { background: #fff; border-right: 1px solid var(--border); position: relative; display: flex; flex-direction: column; overflow: hidden; z-index: 10; }
-        .control-pane { background: var(--panel-bg); padding: 40px 35px 25px; display: flex; flex-direction: column; position: relative; z-index: 10; height: 100vh; overflow: hidden; }
+        .control-pane { background: var(--panel-bg); padding: 45px 35px 25px; display: flex; flex-direction: column; position: relative; z-index: 10; height: 100vh; overflow: hidden; }
         
         .ui-part { transition: 0.4s; opacity: 1; }
         .saver-active .ui-part { opacity: 0; pointer-events: none; }
@@ -57,10 +56,9 @@
 
         .layer { position: absolute; width: 100%; height: 100%; object-fit: contain; transition: 0.4s ease; }
 
-        .section { margin-bottom: 25px; transition: opacity 0.4s ease; }
+        /* 修正：項目間の隙間を1行分 (40px) 開ける */
+        .section { margin-bottom: 40px; transition: opacity 0.4s ease; }
         .section.locked { opacity: 0.15; pointer-events: none; }
-        
-        /* 修正：タイトル系文字をさらに大きく (15px -> 17px) */
         .section-label { font-size: 17px; font-weight: 900; color: #000; margin-bottom: 12px; display: block; letter-spacing: 0.05em; }
         
         .grid-colors { display: flex; gap: 16px; flex-wrap: wrap; }
@@ -72,8 +70,7 @@
         .cover-item.active { border: 2.5px solid #000; background: #fafafa; }
         .cover-thumb { width: 50%; height: 50%; object-fit: contain; }
 
-        /* 修正：コミュニティエリアの縦幅を少しコンパクトに */
-        .community-area-box { height: 180px; flex: none; position: relative; overflow: hidden; background: #fcfcfc; border-radius: 20px; border: 1px dashed var(--border); cursor: grab; touch-action: none; z-index: 5; margin-bottom: 15px; }
+        .community-area-box { flex: 1; position: relative; overflow: hidden; background: #fcfcfc; border-radius: 20px; border: 1px dashed var(--border); cursor: grab; touch-action: none; z-index: 5; margin-bottom: 25px; min-height: 120px; }
         
         #saver-layer { position: fixed; inset: 0; background: #fff; z-index: 9000; display: none; cursor: grab; touch-action: none; }
         body.saver-active #saver-layer { display: block; }
@@ -96,12 +93,11 @@
         .overlay { position: fixed; inset: 0; background: var(--overlay-dim); z-index: 50000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.4s ease; }
         .overlay.show { display: flex; opacity: 1; }
         
-        /* 修正：アンケート画面をより横長に (max-width: 1200px) */
-        .survey-card { background: #fff; width: 92%; max-width: 1200px; height: 80%; border-radius: 40px; overflow: hidden; display: grid; grid-template-columns: 1.1fr 1.2fr; box-shadow: 0 40px 100px rgba(0,0,0,0.3); }
+        /* 修正：アンケート画面の縦横比をiPadに最適化 (縦幅抑制) */
+        .survey-card { background: #fff; width: 88%; max-width: 1200px; height: 72%; border-radius: 40px; overflow: hidden; display: grid; grid-template-columns: 1.1fr 1.2fr; box-shadow: 0 40px 100px rgba(0,0,0,0.3); }
         
-        .survey-preview { background: #f9f9f9; display: flex; justify-content: center; align-items: center; padding: 60px; position: relative; overflow: hidden; }
+        .survey-preview { background: #f9f9f9; display: flex; justify-content: center; align-items: center; padding: 50px; position: relative; overflow: hidden; }
         .survey-preview .preview-wrapper { height: 60%; width: 60%; max-height: 60%; max-width: 60%; opacity: 1 !important; }
-
         .survey-form { padding: 40px 60px; display: flex; flex-direction: column; justify-content: center; overflow-y: auto; }
         .chip { padding: 14px 22px; border: 1px solid var(--border); border-radius: 12px; background: #fff; font-weight: 700; cursor: pointer; font-size: 14px; margin: 0 8px 8px 0; display: inline-block; }
         .chip.active { background: #000; color: #fff; }
@@ -141,11 +137,12 @@
         <div style="flex:1; display:flex; flex-direction:column; min-height:0;">
             <section class="section" id="section-base"><span class="section-label">01. SELECT BODY COLOR  <small style="font-weight:400; font-size:12px;">(本体色を選択してください)</small></span><div class="grid-colors" id="base-options"></div></section>
             <section class="section locked" id="section-cover"><span class="section-label">02. CHOOSE COVER  <small style="font-weight:400; font-size:12px;">(カバーを選択してください)</small></span><div class="grid-covers" id="cover-options"></div></section>
-            <span class="section-label">COMMUNITY <small style="font-weight:400; font-size:12px;">(みんなのEGG MOUSE)</small></span><div id="community-area" class="community-area-box"></div>
+            <span class="section-label">COMMUNITY <small style="font-weight:400; font-size:12px;">(みんなのEGG MOUSE)</small></span>
+            <div id="community-area" class="community-area-box"></div>
             <div style="font-size:12px; color:var(--text-sub); text-align:right; margin-top:5px; font-weight:900;">Latest 20 posts <small style="font-weight:400;">(最新の20件)</small></div>
         </div>
         <div id="btn-container">
-            <div id="cover-alert" class="alert-text" style="font-weight:900;">Please choose a cover <small style="font-weight:700;">(カバーを選んでください)</small></div>
+            <div id="cover-alert" class="alert-text" style="font-weight:900; margin-bottom:10px;">Please choose a cover <small style="font-weight:700;">(カバーを選んでください)</small></div>
             <button id="submitBtn" class="submit-btn" onclick="handlePostAction()" disabled><span>POST NOW</span><small style="font-weight:400; font-size:12px;">投稿する</small></button>
         </div>
     </div>
@@ -180,7 +177,8 @@
 </div>
 
 <script>
-    const CONFIG = { storageKey: 'egg_mouse_v121_data', settingsKey: 'egg_mouse_v115_set', inactivityLimit: 60000, baseCount: 5, coverMax: 10 };
+    /* JSロジック（物理演算、iPadタッチ制御、ADMIN機能）はv122を完全継承 */
+    const CONFIG = { storageKey: 'egg_mouse_v123_data', settingsKey: 'egg_mouse_v115_set', inactivityLimit: 60000, baseCount: 5, coverMax: 10 };
     let communityItems = [], inactivityTimer, isSaverActive = false, grabbedItem = null;
     let selectedBase = null, selectedCover = null, validCoverIdsForRandom = [];
     let surveyInput = { age: '', gender: '' }, isSurveyEnabled = true;
