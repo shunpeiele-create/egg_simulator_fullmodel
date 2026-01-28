@@ -291,7 +291,7 @@
         const lx=isSaverActive?92:90, 
 			ly=isSaverActive?90:80, 
 
-	            md=isSaverActive?9:8; 
+	            md=isSaverActive?7:8; 
 
 
         for(let i=0; i<communityItems.length; i++){
@@ -307,7 +307,7 @@
                     if (isSaverActive) {
                         // 【セーバー用】広い画面なのでゆったり・肉薄
 
-                        if (d < 4.5) f = 1.2;          // 核：めり込み防止
+                        if (d < 5.5) f = 0.9;          // 核：めり込み防止
                         else f = (md - d) * 0.04;      // 膜：寄り添う
 
                     } else {
