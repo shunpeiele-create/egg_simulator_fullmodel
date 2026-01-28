@@ -268,9 +268,19 @@
     function selectCover(id){
         if(!selectedBase) return; selectedCover = id;
         document.querySelectorAll('.cover-item').forEach(el=>{ const isNone=el.innerText.includes('REMOVE')&&id===0; const hasMatch=el.querySelector('img')&&el.querySelector('img').src.includes(`cover_${id}.png`); el.classList.toggle('active', isNone||hasMatch); });
-        document.getElementById('submitBtn').disabled = (id===0);
-        document.getElementById('cover-alert').classList.toggle('show', id===0);
-        if(id !== 0) { const btn = document.getElementById('submitBtn'); triggerBounce(btn); }
+        
+        // --- ここを修正：警告文の表示・非表示を制御 ---
+        const alertEl = document.getElementById('cover-alert');
+        if(id === 0) {
+            alertEl.style.display = 'block'; // カバーなし（REMOVE）なら表示
+            document.getElementById('submitBtn').disabled = true;
+        } else {
+            alertEl.style.display = 'none';  // カバーありなら隠す
+            document.getElementById('submitBtn').disabled = false;
+            triggerBounce(document.getElementById('submitBtn'));
+        }
+        // ------------------------------------------
+
         updatePreview();
     }
     function resetUIState(){
