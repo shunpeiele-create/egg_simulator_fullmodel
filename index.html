@@ -80,7 +80,16 @@
         body.saver-active #saver-layer { display: block; }
         
         /* 物理演算アイテム：回転を滑らかにするため transition から transform を外す */
-        .community-item { position: absolute; width: 34px; height: 44px; pointer-events: none; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); will-change: left, top, transform; backface-visibility: hidden; transition: width 0.8s, height 0.8s; }
+        .community-item { 
+    position: absolute; 
+    width: 34px; 
+    height: 44px; 
+    pointer-events: none; 
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); 
+    will-change: left, top, transform; 
+    backface-visibility: hidden; 
+    transition: width 0.8s, height 0.8s; /* transform は書かない */
+}
 
         @keyframes popInFlash {
             0% { transform: scale(0) rotate(0deg); filter: brightness(5) blur(10px); opacity: 0; }
