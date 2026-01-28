@@ -344,23 +344,28 @@
                 i.x+=(i.dx+i.vx); 
 		i.y+=(i.dy+i.vy); 
 		i.rot+=i.dr; 
+
+		// --- 追加：速度リミッター（どんな衝撃でも時速10%までに抑える） ---
+        i.vx = Math.max(-10, Math.min(10, i.vx));
+        i.vy = Math.max(-10, Math.min(10, i.vy));
+        // ---------------------------------------------------------
+			
 		i.vx*=0.98; 
 		i.vy*=0.98; 
 		i.dr*=0.99; 
                 
-		if(i.x < 0){ i.x=0; i.dx=Math.abs(i.dx); 
-					i.vx*=-0.8; 
-				   } else if(i.x > lx){ 
-						i.x=lx; 
-						i.dx=-Math.abs(i.dx); 
-						i.vx*=-0.8; }
-                if(i.y < 0){ 
-					i.y=0; 
-					i.dy=Math.abs(i.dy); 
-					i.vy*=-0.8; 
-				} else if(i.y > ly){ 
-					i.y=ly; i.dy=-Math.abs(i.dy); 
-					i.vy*=-0.8; }
+		// --- 2. 座標の強制引き戻し：画面外へ逃がさない ---
+                if (i.x < 0) { 
+                    i.x = 0; i.dx = Math.abs(i.dx); i.vx *= -0.8; 
+                } else if (i.x > lx) { 
+                    i.x = lx; i.dx = -Math.abs(i.dx); i.vx *= -0.8; 
+                }
+
+                if (i.y < 0) { 
+                    i.y = 0; i.dy = Math.abs(i.dy); i.vy *= -0.8; 
+                } else if (i.y > ly) { 
+                    i.y = ly; i.dy = -Math.abs(i.dy); i.vy *= -0.8; 
+                }
             }
             i.el.style.left = i.x + '%'; i.el.style.top = i.y + '%'; 
 			i.el.style.transform = `rotate(${i.rot}deg) translateZ(0)`;
