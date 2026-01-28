@@ -212,11 +212,25 @@
         }
         const cc = document.getElementById('cover-options');
         for(let i=0; i<=CONFIG.coverMax; i++){
-            const itm = document.createElement('div'); itm.className='cover-item';
-            if(i===0){ itm.innerHTML=`<span style="font-weight:900;font-size:10px;text-align:center;">REMOVE<br>COVER</span>`; itm.onclick=()=>selectCover(i); cc.appendChild(itm); }
+            const itm = document.createElement('div'); 
+            itm.className='cover-item';
+            cc.appendChild(itm); // ★先に「箱」を順番通りに並べてしまう
+
+            if(i===0){ 
+                itm.innerHTML=`<span style="font-weight:900;font-size:10px;text-align:center;">REMOVE<br>COVER</span>`; 
+                itm.onclick=()=>selectCover(i); 
+            }
             else {
-                const img = new Image(); img.src=`image/cover_${i}.png`; img.className='cover-thumb';
-                img.onload=()=>{ itm.appendChild(img); itm.onclick=()=>selectCover(i); cc.appendChild(itm); validCoverIdsForRandom.push(i); };
+                const img = new Image(); 
+                img.src=`image/cover_${i}.png`; 
+                img.className='cover-thumb';
+                // 画像が読み込めたら箱の中に入れる
+                img.onload=()=>{ 
+                    itm.appendChild(img); 
+                    itm.onclick=()=>selectCover(i); 
+                    validCoverIdsForRandom.push(i); 
+                };
+                // 画像がなかったらその箱自体を消す
                 img.onerror=()=>itm.remove();
             }
         }
