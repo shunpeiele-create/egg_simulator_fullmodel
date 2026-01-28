@@ -385,6 +385,13 @@
         const r=Math.random()*360; el.style.setProperty('--base-rot', r+'deg'); 
         const it={el,x:Math.random()*80+5,y:Math.random()*70+5,rot:r,dx:(Math.random()-0.5)*0.10,dy:(Math.random()-0.5)*0.10,dr:(Math.random()-0.5)*15,vx:0,vy:0}; 
         (isSaverActive ? document.getElementById('saver-layer') : document.getElementById('community-area')).appendChild(el); communityItems.push(it);
+
+	// ★追加：1.2秒後（アニメーション終了後）にクラスを外して物理演算を有効化する
+    setTimeout(() => {
+        el.classList.remove('new-arrival');
+    }, 1200);
+
+
     }
     function downloadCSV(){ const d = JSON.parse(localStorage.getItem(CONFIG.storageKey)||'[]'); const csv = "\ufeffTime,Base,Cover,Age,Gender\n" + d.map(i=>`${i.t},${i.b},${i.c},${i.age},${i.gen}`).join("\n"); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); a.download = `booth_results.csv`; a.click(); }
     function resetData(){ if(confirm("Reset ALL data and Community?")) { localStorage.removeItem(CONFIG.storageKey); communityItems.forEach(i => i.el.remove()); communityItems = []; location.reload(); } }
