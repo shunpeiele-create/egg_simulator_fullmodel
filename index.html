@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>EGG MOUSE SIMULATOR v140</title>
+    <title>EGG MOUSE SIMULATOR v145</title>
     
     <link rel="apple-touch-icon" href="image/top.png">
     
@@ -23,7 +23,6 @@
             box-sizing: border-box; -webkit-tap-highlight-color: transparent; 
             -webkit-user-select: none; -webkit-touch-callout: none;
             user-select: none; outline: none; 
-            /* 英語は Futura PT 系統に限定 */
             font-family: 'Futura PT', Futura, 'Noto Sans JP', sans-serif;
         }
 
@@ -33,7 +32,6 @@
             top: 0; left: 0; right: 0; bottom: 0;
         }
 
-        /* 翻訳部分：細字(400) */
         small { font-weight: 400 !important; }
 
         #global-guard { position: fixed; inset: 0; z-index: 99999; display: none; }
@@ -80,6 +78,8 @@
         .community-area-box { flex: 1; position: relative; overflow: hidden; background: #fcfcfc; border-radius: 20px; border: 1px dashed var(--border); cursor: grab; touch-action: none; z-index: 5; margin-bottom: 25px; min-height: 100px; }
         #saver-layer { position: fixed; inset: 0; background: #fff; z-index: 9000; display: none; cursor: grab; touch-action: none; }
         body.saver-active #saver-layer { display: block; }
+        
+        /* 物理演算アイテム：回転を滑らかにするため transition から transform を外す */
         .community-item { position: absolute; width: 34px; height: 44px; pointer-events: none; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); will-change: left, top, transform; backface-visibility: hidden; transition: width 0.8s, height 0.8s; }
 
         @keyframes popInFlash {
@@ -96,13 +96,8 @@
         .submit-btn { width: 100%; padding: 22px; background: #000; color: #fff; border: none; border-radius: 20px; font-size: 20px; font-weight: 900; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; letter-spacing: 0.08em; }
         .submit-btn:disabled { background: var(--disabled); color: #8e8e93; }
 
-        #cover-alert { 
-            color: var(--alert); 
-            font-weight: 900; 
-            min-height: 1.4em; /* 1行分の高さを常に確保 */
-            margin-bottom: 10px;
-            display: block;    /* display: none を使わずに管理する */
-        }
+        /* レイアウト固定用の警告エリア */
+        #cover-alert { color: var(--alert); font-weight: 900; min-height: 1.4em; margin-bottom: 10px; display: block; }
 
         .overlay { position: fixed; inset: 0; background: var(--overlay-dim); z-index: 50000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.4s ease; }
         .overlay.show { display: flex; opacity: 1; }
@@ -218,25 +213,14 @@
         }
         const cc = document.getElementById('cover-options');
         for(let i=0; i<=CONFIG.coverMax; i++){
-            const itm = document.createElement('div'); 
-            itm.className='cover-item';
-            cc.appendChild(itm); // ★先に「箱」を順番通りに並べてしまう
-
+            const itm = document.createElement('div'); itm.className='cover-item';
+            cc.appendChild(itm); // 順序固定：先に箱を作る
             if(i===0){ 
                 itm.innerHTML=`<span style="font-weight:900;font-size:10px;text-align:center;">REMOVE<br>COVER</span>`; 
                 itm.onclick=()=>selectCover(i); 
-            }
-            else {
-                const img = new Image(); 
-                img.src=`image/cover_${i}.png`; 
-                img.className='cover-thumb';
-                // 画像が読み込めたら箱の中に入れる
-                img.onload=()=>{ 
-                    itm.appendChild(img); 
-                    itm.onclick=()=>selectCover(i); 
-                    validCoverIdsForRandom.push(i); 
-                };
-                // 画像がなかったらその箱自体を消す
+            } else {
+                const img = new Image(); img.src=`image/cover_${i}.png`; img.className='cover-thumb';
+                img.onload=()=>{ itm.appendChild(img); itm.onclick=()=>selectCover(i); validCoverIdsForRandom.push(i); };
                 img.onerror=()=>itm.remove();
             }
         }
@@ -271,22 +255,19 @@
         const cs = document.getElementById('section-cover'); cs.classList.remove('locked');
         triggerBounce(cs); updatePreview();
     }
-function selectCover(id){
+    function selectCover(id){
         if(!selectedBase) return; selectedCover = id;
         document.querySelectorAll('.cover-item').forEach(el=>{ const isNone=el.innerText.includes('REMOVE')&&id===0; const hasMatch=el.querySelector('img')&&el.querySelector('img').src.includes(`cover_${id}.png`); el.classList.toggle('active', isNone||hasMatch); });
         
         const alertEl = document.getElementById('cover-alert');
         if(id === 0) {
-            // 警告を表示する（テキストを戻す）
             alertEl.innerHTML = 'Please choose a cover <small>(カバーを選んでください)</small>';
             document.getElementById('submitBtn').disabled = true;
         } else {
-            // 警告を「透明」にする（高さを保ったまま中身だけ空にする）
-            alertEl.innerHTML = '&nbsp;'; // 半角スペースを入れて高さを維持
+            alertEl.innerHTML = '&nbsp;'; // 高さを保って隠す
             document.getElementById('submitBtn').disabled = false;
             triggerBounce(document.getElementById('submitBtn'));
         }
-
         updatePreview();
     }
     function resetUIState(){
@@ -295,6 +276,7 @@ function selectCover(id){
         document.querySelectorAll('.color-dot, .cover-item, .chip').forEach(el=>el.classList.remove('active'));
         surveyInput = { age: '', gender: '' }; document.getElementById('agree-cb').checked = false;
         document.getElementById('section-cover').classList.add('locked'); document.getElementById('submitBtn').disabled=true;
+        document.getElementById('cover-alert').innerHTML = 'Please choose a cover <small>(カバーを選んでください)</small>';
     }
     function showSurvey(){
         const target=document.getElementById('survey-clone-target'); target.innerHTML='';
@@ -313,83 +295,72 @@ function selectCover(id){
     function toggleSurveySetting(){ isSurveyEnabled=!isSurveyEnabled; const s = JSON.parse(localStorage.getItem(CONFIG.settingsKey)||'{}'); s.survey=isSurveyEnabled; localStorage.setItem(CONFIG.settingsKey, JSON.stringify(s)); updateSurveyUI(); }
     function updateSurveyUI(){ const l=document.getElementById('survey-status-label'); l.innerText=isSurveyEnabled?'ON':'OFF'; l.style.color=isSurveyEnabled?'#34c759':'#8e8e93'; }
     function changePW(){ const n=prompt("New PW"); if(n){ const s = JSON.parse(localStorage.getItem(CONFIG.settingsKey)||'{}'); s.pw=n; localStorage.setItem(CONFIG.settingsKey, JSON.stringify(s)); alert("Changed"); } }
-    function onPointerDown(e){ if(e.cancelable) e.preventDefault(); const target = isSaverActive ? document.getElementById('saver-layer') : document.getElementById('community-area'); const rect = target.getBoundingClientRect(); const tx = ((e.clientX - rect.left) / rect.width) * 100, ty = ((e.clientY - rect.top) / rect.height) * 100; let found = null; communityItems.forEach(i=>{ const hr = isSaverActive ? 6.5 : 4.5; if(Math.sqrt((tx-i.x)**2+(ty-i.y)**2) < hr) found=i; }); if(found){ grabbedItem=found; grabbedItem.vx=0; grabbedItem.vy=0; } else { communityItems.forEach(i=>{ const dx=i.x-tx, dy=i.y-ty, d=Math.sqrt(dx*dx+dy*dy), r=isSaverActive?20:15; if(d < r){ i.vx+=(dx/d)*(r-d)*0.6; i.vy+=(dy/d)*(r-d)*0.6; i.dr+=(Math.random()-0.5)*10; } }); } }
-    function onPointerMove(e){ if(!grabbedItem)return; if(e.cancelable) e.preventDefault(); const target = isSaverActive ? document.getElementById('saver-layer') : document.getElementById('community-area'); const rect = target.getBoundingClientRect(); const tx=((e.clientX-rect.left)/rect.width)*100, ty=((e.clientY-rect.top)/rect.height)*100; grabbedItem.vx = (tx - grabbedItem.x) * 0.85; grabbedItem.vy = (ty - grabbedItem.y) * 0.85; grabbedItem.x = tx; grabbedItem.y = ty; }
+
+    function onPointerDown(e){ 
+        if(e.cancelable) e.preventDefault(); 
+        const target = isSaverActive ? document.getElementById('saver-layer') : document.getElementById('community-area'); 
+        const rect = target.getBoundingClientRect(); 
+        const tx = ((e.clientX - rect.left) / rect.width) * 100, ty = ((e.clientY - rect.top) / rect.height) * 100; 
+        let found = null; 
+        communityItems.forEach(i=>{ 
+            const hr = isSaverActive ? 6.5 : 4.5; 
+            if(Math.sqrt((tx-i.x)**2+(ty-i.y)**2) < hr) found=i; 
+        }); 
+        if(found){ 
+            grabbedItem=found; grabbedItem.vx=0; grabbedItem.vy=0; 
+        } else { 
+            communityItems.forEach(i=>{ 
+                const dx=i.x-tx, dy=i.y-ty, d=Math.sqrt(dx*dx+dy*dy), r=isSaverActive?20:15; 
+                if(d < r){ 
+                    i.vx+=(dx/d)*(r-d)*0.6; i.vy+=(dy/d)*(r-d)*0.6; 
+                    i.dr+=(Math.random()-0.5)*15; // 指で弾いた時の回転力
+                } 
+            }); 
+        } 
+    }
     
+    function onPointerMove(e){ 
+        if(!grabbedItem)return; 
+        if(e.cancelable) e.preventDefault(); 
+        const target = isSaverActive ? document.getElementById('saver-layer') : document.getElementById('community-area'); 
+        const rect = target.getBoundingClientRect(); 
+        const tx=((e.clientX-rect.left)/rect.width)*100, ty=((e.clientY-rect.top)/rect.height)*100; 
+        grabbedItem.vx = (tx - grabbedItem.x) * 0.85; grabbedItem.vy = (ty - grabbedItem.y) * 0.85; 
+        grabbedItem.x = tx; grabbedItem.y = ty; 
+    }
     
     function updateAnimation(){
-        const lx=isSaverActive?92:90, 
-			ly=isSaverActive?90:80, 
-
-	            md=isSaverActive?7:8; 
-
-
+        const lx=isSaverActive?92:90, ly=isSaverActive?90:80, md=isSaverActive?7:8; 
         for(let i=0; i<communityItems.length; i++){
             for(let j=i+1; j<communityItems.length; j++){
                 const a=communityItems[i], b=communityItems[j]; if(a===grabbedItem||b===grabbedItem)continue;
                 const dx=b.x-a.x, dy=b.y-a.y, d = Math.sqrt(dx*dx + dy*dy);
-                
-                // ここから二段階ロジック
                 if(d < md && d > 0.1){ 
                     const ang = Math.atan2(dy, dx);
                     let f;
-                    
                     if (isSaverActive) {
-                        // 【セーバー用】広い画面なのでゆったり・肉薄
-
-                        if (d < 5.5) f = 0.9;          // 核：めり込み防止
-                        else f = (md - d) * 0.04;      // 膜：寄り添う
-
+                        if (d < 5.5) f = 0.9; else f = (md - d) * 0.04;
                     } else {
-                        // 【COMMUNITY用】狭いので、もっと手前で強く弾く
-
-                        if (d < 7.5) f = 1.5;          // 核：バリアを広げて重なり絶対阻止
-                        else f = (md - d) * 0.16;      // 膜：反発を強くして密度を下げる
+                        if (d < 7.5) f = 1.5; else f = (md - d) * 0.16;
                     }
-                    
                     a.vx -= Math.cos(ang) * f; a.vy -= Math.sin(ang) * f;
                     b.vx += Math.cos(ang) * f; b.vy += Math.sin(ang) * f;
-                    }
-	        }
-        }
-
-
-        communityItems.forEach(i=>{
-            
-		if(i !== grabbedItem){ 
-                i.x+=(i.dx+i.vx); 
-		i.y+=(i.dy+i.vy); 
-		i.rot+=i.dr; 
-
-		// --- 追加：速度リミッター（どんな衝撃でも時速10%までに抑える） ---
-        i.vx = Math.max(-10, Math.min(10, i.vx));
-        i.vy = Math.max(-10, Math.min(10, i.vy));
-        // ---------------------------------------------------------
-			
-		i.vx*=0.98; 
-		i.vy*=0.98; 
-		i.dr*=0.99; 
-                
-		// --- 2. 座標の強制引き戻し：画面外へ逃がさない ---
-                if (i.x < 0) { 
-                    i.x = 0; i.dx = Math.abs(i.dx); i.vx *= -0.8; 
-                } else if (i.x > lx) { 
-                    i.x = lx; i.dx = -Math.abs(i.dx); i.vx *= -0.8; 
-                }
-
-                if (i.y < 0) { 
-                    i.y = 0; i.dy = Math.abs(i.dy); i.vy *= -0.8; 
-                } else if (i.y > ly) { 
-                    i.y = ly; i.dy = -Math.abs(i.dy); i.vy *= -0.8; 
                 }
             }
+        }
+        communityItems.forEach(i=>{
+            if(i !== grabbedItem){ 
+                i.x+=(i.dx+i.vx); i.y+=(i.dy+i.vy); i.rot+=i.dr; 
+                i.vx = Math.max(-10, Math.min(10, i.vx)); i.vy = Math.max(-10, Math.min(10, i.vy));
+                i.vx*=0.98; i.vy*=0.98; i.dr*=0.99; 
+                if(i.x < 0){ i.x=0; i.dx=Math.abs(i.dx); i.vx*=-0.8; } else if(i.x > lx){ i.x=lx; i.dx=-Math.abs(i.dx); i.vx*=-0.8; }
+                if(i.y < 0){ i.y=0; i.dy=Math.abs(i.dy); i.vy*=-0.8; } else if(i.y > ly){ i.y=ly; i.dy=-Math.abs(i.dy); i.vy*=-0.8; }
+            }
             i.el.style.left = i.x + '%'; i.el.style.top = i.y + '%'; 
-			i.el.style.transform = `rotate(${i.rot}deg) translateZ(0)`;
+            i.el.style.transform = `rotate(${i.rot}deg) translateZ(0)`;
         });
         requestAnimationFrame(updateAnimation);
     }
-    
-    
     
     function resetInactivityTimer(){ clearTimeout(inactivityTimer); inactivityTimer=setTimeout(()=>startSaver(), CONFIG.inactivityLimit); }
     function startSaver(){ 
@@ -412,9 +383,7 @@ function selectCover(id){
         el.style.width = "34px"; el.style.height = "44px";
         el.innerHTML=`<img src="image/base_${b}.png" style="width:100%;position:absolute;"><img src="image/cover_${c}.png" style="width:100%;position:absolute;opacity:${c===0?0:1}" onerror="this.style.opacity=0">`; 
         const r=Math.random()*360; el.style.setProperty('--base-rot', r+'deg'); 
-		
-        const it={el,x:Math.random()*80+5,y:Math.random()*70+5,rot:r,dx:(Math.random()-0.5)*0.10,dy:(Math.random()-0.5)*0.10,dr:0,vx:0,vy:0}; 
-		
+        const it={el,x:Math.random()*80+5,y:Math.random()*70+5,rot:r,dx:(Math.random()-0.5)*0.10,dy:(Math.random()-0.5)*0.10,dr:(Math.random()-0.5)*15,vx:0,vy:0}; 
         (isSaverActive ? document.getElementById('saver-layer') : document.getElementById('community-area')).appendChild(el); communityItems.push(it);
     }
     function downloadCSV(){ const d = JSON.parse(localStorage.getItem(CONFIG.storageKey)||'[]'); const csv = "\ufeffTime,Base,Cover,Age,Gender\n" + d.map(i=>`${i.t},${i.b},${i.c},${i.age},${i.gen}`).join("\n"); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); a.download = `booth_results.csv`; a.click(); }
