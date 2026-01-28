@@ -96,7 +96,13 @@
         .submit-btn { width: 100%; padding: 22px; background: #000; color: #fff; border: none; border-radius: 20px; font-size: 20px; font-weight: 900; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; letter-spacing: 0.08em; }
         .submit-btn:disabled { background: var(--disabled); color: #8e8e93; }
 
-        #cover-alert { color: var(--alert); font-weight: 900; margin-bottom: 10px; }
+        #cover-alert { 
+            color: var(--alert); 
+            font-weight: 900; 
+            min-height: 1.4em; /* 1行分の高さを常に確保 */
+            margin-bottom: 10px;
+            display: block;    /* display: none を使わずに管理する */
+        }
 
         .overlay { position: fixed; inset: 0; background: var(--overlay-dim); z-index: 50000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.4s ease; }
         .overlay.show { display: flex; opacity: 1; }
@@ -265,21 +271,21 @@
         const cs = document.getElementById('section-cover'); cs.classList.remove('locked');
         triggerBounce(cs); updatePreview();
     }
-    function selectCover(id){
+function selectCover(id){
         if(!selectedBase) return; selectedCover = id;
         document.querySelectorAll('.cover-item').forEach(el=>{ const isNone=el.innerText.includes('REMOVE')&&id===0; const hasMatch=el.querySelector('img')&&el.querySelector('img').src.includes(`cover_${id}.png`); el.classList.toggle('active', isNone||hasMatch); });
         
-        // --- ここを修正：警告文の表示・非表示を制御 ---
         const alertEl = document.getElementById('cover-alert');
         if(id === 0) {
-            alertEl.style.display = 'block'; // カバーなし（REMOVE）なら表示
+            // 警告を表示する（テキストを戻す）
+            alertEl.innerHTML = 'Please choose a cover <small>(カバーを選んでください)</small>';
             document.getElementById('submitBtn').disabled = true;
         } else {
-            alertEl.style.display = 'none';  // カバーありなら隠す
+            // 警告を「透明」にする（高さを保ったまま中身だけ空にする）
+            alertEl.innerHTML = '&nbsp;'; // 半角スペースを入れて高さを維持
             document.getElementById('submitBtn').disabled = false;
             triggerBounce(document.getElementById('submitBtn'));
         }
-        // ------------------------------------------
 
         updatePreview();
     }
