@@ -333,10 +333,22 @@
 		i.vy*=0.98; 
 		i.dr*=0.99; 
                 
-		if(i.x < 0){ i.x=0; i.dx=Math.abs(i.dx); i.vx*=-0.8; } else if(i.x > lx){ i.x=lx; i.dx=-Math.abs(i.dx); i.vx*=-0.8; }
-                if(i.y < 0){ i.y=0; i.dy=Math.abs(i.dy); i.vy*=-0.8; } else if(i.y > ly){ i.y=ly; i.dy=-Math.abs(i.dy); i.vy*=-0.8; }
+		if(i.x < 0){ i.x=0; i.dx=Math.abs(i.dx); 
+					i.vx*=-0.8; 
+				   } else if(i.x > lx){ 
+						i.x=lx; 
+						i.dx=-Math.abs(i.dx); 
+						i.vx*=-0.8; }
+                if(i.y < 0){ 
+					i.y=0; 
+					i.dy=Math.abs(i.dy); 
+					i.vy*=-0.8; 
+				} else if(i.y > ly){ 
+					i.y=ly; i.dy=-Math.abs(i.dy); 
+					i.vy*=-0.8; }
             }
-            i.el.style.left = i.x + '%'; i.el.style.top = i.y + '%'; i.el.style.transform = `rotate(${i.rot}deg) translateZ(0)`;
+            i.el.style.left = i.x + '%'; i.el.style.top = i.y + '%'; 
+			i.el.style.transform = `rotate(${i.rot}deg) translateZ(0)`;
         });
         requestAnimationFrame(updateAnimation);
     }
@@ -364,7 +376,9 @@
         el.style.width = "34px"; el.style.height = "44px";
         el.innerHTML=`<img src="image/base_${b}.png" style="width:100%;position:absolute;"><img src="image/cover_${c}.png" style="width:100%;position:absolute;opacity:${c===0?0:1}" onerror="this.style.opacity=0">`; 
         const r=Math.random()*360; el.style.setProperty('--base-rot', r+'deg'); 
-        const it={el,x:Math.random()*80+5,y:Math.random()*70+5,rot:r,dx:(Math.random()-0.5)*0.06,dy:(Math.random()-0.5)*0.06,dr:0,vx:0,vy:0}; 
+		
+        const it={el,x:Math.random()*80+5,y:Math.random()*70+5,rot:r,dx:(Math.random()-0.5)*0.10,dy:(Math.random()-0.5)*0.10,dr:0,vx:0,vy:0}; 
+		
         (isSaverActive ? document.getElementById('saver-layer') : document.getElementById('community-area')).appendChild(el); communityItems.push(it);
     }
     function downloadCSV(){ const d = JSON.parse(localStorage.getItem(CONFIG.storageKey)||'[]'); const csv = "\ufeffTime,Base,Cover,Age,Gender\n" + d.map(i=>`${i.t},${i.b},${i.c},${i.age},${i.gen}`).join("\n"); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); a.download = `booth_results.csv`; a.click(); }
