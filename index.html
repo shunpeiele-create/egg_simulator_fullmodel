@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>EGG MOUSE SIMULATOR v146</title>
+    <title>EGG MOUSE SIMULATOR v147</title>
     
     <link rel="apple-touch-icon" href="image/top.png">
     
@@ -79,8 +79,7 @@
         #saver-layer { position: fixed; inset: 0; background: #fff; z-index: 9000; display: none; cursor: grab; touch-action: none; }
         body.saver-active #saver-layer { display: block; }
         
-        /* 物理演算アイテム：transition から transform を外し、JSに完全委ねる */
-        .community-item { position: absolute; width: 34px; height: 44px; pointer-events: none; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); will-change: left, top, transform; backface-visibility: hidden; transition: width 0.8s, height 0.8s; }
+        .community-item { position: absolute; width: 34px; height: 44px; pointer-events: none; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); will-change: left, top, transform; backface-visibility: hidden; transition: width 0.8s, height 0.8s, opacity 0.5s; }
 
         @keyframes unlockBounce { 0% { transform: translateY(0); } 40% { transform: translateY(-15px); } 100% { transform: translateY(0); } }
         .is-unlocking { animation: unlockBounce 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
@@ -183,14 +182,13 @@
             <span style="font-weight:900;">Survey Form (アンケート表示)</span><span id="survey-status-label" style="font-weight:900;">ON</span>
         </div>
         <button onclick="downloadCSV()" class="admin-btn">CSV DOWNLOAD</button>
-        <button onclick="changePW()" class="admin-btn">CHANGE PASSWORD</button>
         <button onclick="resetData()" class="admin-btn" style="color:red; border-color:red;">RESET ALL DATA</button>
         <button onclick="closeAdmin()" class="admin-btn" style="background:#eee; border:none; margin-top:20px;">CLOSE</button>
     </div>
 </div>
 
 <script>
-    const CONFIG = { storageKey: 'egg_mouse_v131_data', settingsKey: 'egg_mouse_v130_set', inactivityLimit: 60000, baseCount: 5, coverMax: 11 };
+    const CONFIG = { storageKey: 'egg_mouse_v131_data', settingsKey: 'egg_mouse_v130_set', inactivityLimit: 60000, baseCount: 5, coverMax: 11, maxItems: 20 };
     let communityItems = [], inactivityTimer, isSaverActive = false, grabbedItem = null;
     let selectedBase = null, selectedCover = null, validCoverIdsForRandom = [];
     let surveyInput = { age: '', gender: '' }, isSurveyEnabled = true;
@@ -229,18 +227,23 @@
 
     function triggerBounce(el) { el.classList.remove('is-unlocking'); void el.offsetWidth; el.classList.add('is-unlocking'); }
     function handlePostAction() { if (isSurveyEnabled) showSurvey(); else executeFinalPost(); }
+    
     function executeFinalPost() {
         document.getElementById('global-guard').style.display = 'block';
         if (isSurveyEnabled) hideSurvey();
         const p = document.getElementById('main-preview');
         p.classList.remove('rise', 'fly'); void p.offsetWidth; p.classList.add('fly'); 
+        
+        // 統計データ保存（isInitial=false相当）
         localStorage.setItem(CONFIG.storageKey, JSON.stringify([...JSON.parse(localStorage.getItem(CONFIG.storageKey)||'[]'), {t:new Date().toLocaleString(), b:selectedBase, c:selectedCover, age:surveyInput.age, gen:surveyInput.gender}]));
+        
         setTimeout(() => {
             addCommunityItem(selectedBase, selectedCover, false);
             const th = document.getElementById('thanks-overlay'); th.style.display = 'flex'; setTimeout(() => th.classList.add('show'), 10);
             setTimeout(() => { resetUIState(); th.classList.remove('show'); setTimeout(() => { th.style.display = 'none'; document.getElementById('global-guard').style.display = 'none'; }, 400); }, 1600);
         }, 950); 
     }
+
     function selectBase(id){
         selectedBase = id; document.getElementById('img-default').style.opacity='0'; 
         const p = document.getElementById('main-preview'); p.style.opacity='1'; p.classList.remove('rise', 'fly');
@@ -283,11 +286,21 @@
     function hideSurvey(){ document.getElementById('survey-overlay').classList.remove('show'); }
     function setSurvey(k,v){ surveyInput[k]=v; document.querySelectorAll(`#${k}-chips .chip`).forEach(c=>c.classList.toggle('active', c.innerText.includes(v))); }
     function updateFinalBtn(){ document.getElementById('finalPostBtn').disabled = !document.getElementById('agree-cb').checked; }
-    function openAdmin(){ const set = JSON.parse(localStorage.getItem(CONFIG.settingsKey) || '{"pw":"1234"}'); const pw = prompt("Password"); if(pw === set.pw) { document.getElementById('admin-overlay').classList.add('show'); } else if(pw !== null) { alert("Incorrect password"); } }
+
+    // パスワードをソースコード内に固定（緊急対応用）
+    function openAdmin(){ 
+        const MASTER_PW = "8056"; 
+        const pw = prompt("Password"); 
+        if(pw === MASTER_PW) { 
+            document.getElementById('admin-overlay').classList.add('show'); 
+        } else if(pw !== null) { 
+            alert("Incorrect password"); 
+        } 
+    }
+
     function closeAdmin(){ document.getElementById('admin-overlay').classList.remove('show'); }
     function toggleSurveySetting(){ isSurveyEnabled=!isSurveyEnabled; const s = JSON.parse(localStorage.getItem(CONFIG.settingsKey)||'{}'); s.survey=isSurveyEnabled; localStorage.setItem(CONFIG.settingsKey, JSON.stringify(s)); updateSurveyUI(); }
     function updateSurveyUI(){ const l=document.getElementById('survey-status-label'); l.innerText=isSurveyEnabled?'ON':'OFF'; l.style.color=isSurveyEnabled?'#34c759':'#8e8e93'; }
-    function changePW(){ const n=prompt("New PW"); if(n){ const s = JSON.parse(localStorage.getItem(CONFIG.settingsKey)||'{}'); s.pw=n; localStorage.setItem(CONFIG.settingsKey, JSON.stringify(s)); alert("Changed"); } }
 
     function onPointerDown(e){ 
         if(e.cancelable) e.preventDefault(); 
@@ -342,9 +355,7 @@
             }
         }
         communityItems.forEach(i=>{
-            // スムーズ出現演出：scaleを物理ループで更新
             if(i.scale < 1) { i.scale += 0.04; if(i.scale > 1) i.scale = 1; }
-
             if(i !== grabbedItem){ 
                 i.x+=(i.dx+i.vx); i.y+=(i.dy+i.vy); i.rot+=i.dr; 
                 i.vx = Math.max(-10, Math.min(10, i.vx)); i.vy = Math.max(-10, Math.min(10, i.vy));
@@ -353,7 +364,6 @@
                 if(i.y < 0){ i.y=0; i.dy=Math.abs(i.dy); i.vy*=-0.8; } else if(i.y > ly){ i.y=ly; i.dy=-Math.abs(i.dy); i.vy*=-0.8; }
             }
             i.el.style.left = i.x + '%'; i.el.style.top = i.y + '%'; 
-            // transformを一括制御：scaleも同時に反映することでガクつきを解消
             i.el.style.transform = `rotate(${i.rot}deg) scale(${i.scale}) translateZ(0)`;
         });
         requestAnimationFrame(updateAnimation);
@@ -374,8 +384,24 @@
         resetInactivityTimer(); 
     }
     function updatePreview(){ document.getElementById('img-base').src=`image/base_${selectedBase}.png`; const c=document.getElementById('img-cover'); if(selectedCover>0){ c.src=`image/cover_${selectedCover}.png`; c.style.opacity="1"; } else { c.style.opacity="0"; } }
-    function loadCommunity(it){ if(it){ for(let i=0; i<5; i++){ if(validCoverIdsForRandom.length) addCommunityItem(Math.floor(Math.random()*5)+1, validCoverIdsForRandom[Math.floor(Math.random()*validCoverIdsForRandom.length)], true); } } }
+    
+    function loadCommunity(it){ 
+        if(it){ 
+            // 最初の5つを生成
+            for(let i=0; i<5; i++){ 
+                if(validCoverIdsForRandom.length) addCommunityItem(Math.floor(Math.random()*5)+1, validCoverIdsForRandom[Math.floor(Math.random()*validCoverIdsForRandom.length)], true); 
+            } 
+        } 
+    }
+
     function addCommunityItem(b,c,isInitial){ 
+        // 最大数制限のチェック: 20個を超えていたら一番古い(配列の先頭)を削除
+        if(communityItems.length >= CONFIG.maxItems) {
+            const oldest = communityItems.shift();
+            oldest.el.style.opacity = '0'; // 消える演出
+            setTimeout(() => oldest.el.remove(), 500);
+        }
+
         const el=document.createElement('div'); el.className='community-item'; 
         el.style.width = "34px"; el.style.height = "44px";
         el.innerHTML=`<img src="image/base_${b}.png" style="width:100%;position:absolute;"><img src="image/cover_${c}.png" style="width:100%;position:absolute;opacity:${c===0?0:1}" onerror="this.style.opacity=0">`; 
@@ -389,10 +415,12 @@
             dy:(Math.random()-0.5)*0.10,
             dr:(Math.random()-0.5)*15,
             vx:0, vy:0,
-            scale: isInitial ? 1 : 0 // 投稿時は0からスタート
+            scale: isInitial ? 1 : 0 
         }; 
-        (isSaverActive ? document.getElementById('saver-layer') : document.getElementById('community-area')).appendChild(el); communityItems.push(it);
+        (isSaverActive ? document.getElementById('saver-layer') : document.getElementById('community-area')).appendChild(el); 
+        communityItems.push(it);
     }
+
     function downloadCSV(){ const d = JSON.parse(localStorage.getItem(CONFIG.storageKey)||'[]'); const csv = "\ufeffTime,Base,Cover,Age,Gender\n" + d.map(i=>`${i.t},${i.b},${i.c},${i.age},${i.gen}`).join("\n"); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); a.download = `booth_results.csv`; a.click(); }
     function resetData(){ if(confirm("Reset ALL data and Community?")) { localStorage.removeItem(CONFIG.storageKey); communityItems.forEach(i => i.el.remove()); communityItems = []; location.reload(); } }
     init();
