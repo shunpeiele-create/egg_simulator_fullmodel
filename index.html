@@ -285,25 +285,64 @@
     function changePW(){ const n=prompt("New PW"); if(n){ const s = JSON.parse(localStorage.getItem(CONFIG.settingsKey)||'{}'); s.pw=n; localStorage.setItem(CONFIG.settingsKey, JSON.stringify(s)); alert("Changed"); } }
     function onPointerDown(e){ if(e.cancelable) e.preventDefault(); const target = isSaverActive ? document.getElementById('saver-layer') : document.getElementById('community-area'); const rect = target.getBoundingClientRect(); const tx = ((e.clientX - rect.left) / rect.width) * 100, ty = ((e.clientY - rect.top) / rect.height) * 100; let found = null; communityItems.forEach(i=>{ const hr = isSaverActive ? 6.5 : 4.5; if(Math.sqrt((tx-i.x)**2+(ty-i.y)**2) < hr) found=i; }); if(found){ grabbedItem=found; grabbedItem.vx=0; grabbedItem.vy=0; } else { communityItems.forEach(i=>{ const dx=i.x-tx, dy=i.y-ty, d=Math.sqrt(dx*dx+dy*dy), r=isSaverActive?20:15; if(d < r){ i.vx+=(dx/d)*(r-d)*0.6; i.vy+=(dy/d)*(r-d)*0.6; i.dr+=(Math.random()-0.5)*10; } }); } }
     function onPointerMove(e){ if(!grabbedItem)return; if(e.cancelable) e.preventDefault(); const target = isSaverActive ? document.getElementById('saver-layer') : document.getElementById('community-area'); const rect = target.getBoundingClientRect(); const tx=((e.clientX-rect.left)/rect.width)*100, ty=((e.clientY-rect.top)/rect.height)*100; grabbedItem.vx = (tx - grabbedItem.x) * 0.85; grabbedItem.vy = (ty - grabbedItem.y) * 0.85; grabbedItem.x = tx; grabbedItem.y = ty; }
+    
+    
     function updateAnimation(){
-        const lx=isSaverActive?92:90, ly=isSaverActive?90:80, md=isSaverActive?12:9; 
+        const lx=isSaverActive?92:90, ly=isSaverActive?90:80, 
+
+	            md=isSaverActive?10.5:8; 
+
+
         for(let i=0; i<communityItems.length; i++){
             for(let j=i+1; j<communityItems.length; j++){
                 const a=communityItems[i], b=communityItems[j]; if(a===grabbedItem||b===grabbedItem)continue;
                 const dx=b.x-a.x, dy=b.y-a.y, d = Math.sqrt(dx*dx + dy*dy);
-                if(d < md && d > 0.1){ const ang=Math.atan2(dy,dx), f=(md-d)*0.08; a.vx-=Math.cos(ang)*f; a.vy-=Math.sin(ang)*f; b.vx+=Math.cos(ang)*f; b.vy+=Math.sin(ang)*f; }
-            }
+                
+                // ここから二段階ロジック
+                if(d < md && d > 0.1){ 
+                    const ang = Math.atan2(dy, dx);
+                    let f;
+                    
+                    if (isSaverActive) {
+                        // 【セーバー用】広い画面なのでゆったり・肉薄
+
+                        if (d < 4.5) f = 1.2;          // 核：めり込み防止
+                        else f = (md - d) * 0.04;      // 膜：寄り添う
+
+                    } else {
+                        // 【COMMUNITY用】狭いので、もっと手前で強く弾く
+
+                        if (d < 7.5) f = 1.5;          // 核：バリアを広げて重なり絶対阻止
+                        else f = (md - d) * 0.16;      // 膜：反発を強くして密度を下げる
+                    }
+                    
+                    a.vx -= Math.cos(ang) * f; a.vy -= Math.sin(ang) * f;
+                    b.vx += Math.cos(ang) * f; b.vy += Math.sin(ang) * f;
+                    }
+	        }
         }
+
+
         communityItems.forEach(i=>{
-            if(i !== grabbedItem){ 
-                i.x+=(i.dx+i.vx); i.y+=(i.dy+i.vy); i.rot+=i.dr; i.vx*=0.975; i.vy*=0.975; i.dr*=0.96; 
-                if(i.x < 0){ i.x=0; i.dx=Math.abs(i.dx); i.vx*=-0.8; } else if(i.x > lx){ i.x=lx; i.dx=-Math.abs(i.dx); i.vx*=-0.8; }
+            
+		if(i !== grabbedItem){ 
+                i.x+=(i.dx+i.vx); 
+		i.y+=(i.dy+i.vy); 
+		i.rot+=i.dr; 
+		i.vx*=0.98; 
+		i.vy*=0.98; 
+		i.dr*=0.99; 
+                
+		if(i.x < 0){ i.x=0; i.dx=Math.abs(i.dx); i.vx*=-0.8; } else if(i.x > lx){ i.x=lx; i.dx=-Math.abs(i.dx); i.vx*=-0.8; }
                 if(i.y < 0){ i.y=0; i.dy=Math.abs(i.dy); i.vy*=-0.8; } else if(i.y > ly){ i.y=ly; i.dy=-Math.abs(i.dy); i.vy*=-0.8; }
             }
             i.el.style.left = i.x + '%'; i.el.style.top = i.y + '%'; i.el.style.transform = `rotate(${i.rot}deg) translateZ(0)`;
         });
         requestAnimationFrame(updateAnimation);
     }
+    
+    
+    
     function resetInactivityTimer(){ clearTimeout(inactivityTimer); inactivityTimer=setTimeout(()=>startSaver(), CONFIG.inactivityLimit); }
     function startSaver(){ 
         if(isSaverActive)return; isSaverActive=true; 
