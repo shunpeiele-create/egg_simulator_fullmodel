@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>EGG MOUSE SIMULATOR v150</title>
+    <title>EGG MOUSE SIMULATOR v151</title>
     
     <link rel="apple-touch-icon" href="image/top.png">
     
@@ -26,17 +26,20 @@
             font-family: 'Futura PT', Futura, 'Noto Sans JP', sans-serif;
         }
 
-        /* ★v150修正：上下左右強制ピン留め方式 */
-        html, body { 
+        /* ★v151修正：土台(html)にも色を塗り、bodyをinset:0で強制全画面化 */
+        html {
+            background: var(--primary-bg); /* これで隙間が出ても背景色で埋まる */
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body { 
             margin: 0; padding: 0; 
-            background: var(--primary-bg); /* 背景色を徹底 */
+            background: var(--primary-bg);
             overflow: hidden; 
             
             position: fixed;
-            top: 0; 
-            left: 0; 
-            right: 0; 
-            bottom: 0; /* 強制的に下端まで伸ばす */
+            inset: 0; /* top, right, bottom, left すべて0と同じ最強の指定 */
             
             width: 100%;
             height: 100%;
@@ -46,7 +49,7 @@
 
         #global-guard { position: fixed; inset: 0; z-index: 99999; display: none; }
         
-        /* セーフエリア対応 */
+        /* UI位置は今の「GOODな高さ」を維持 */
         .manual-saver-trigger { 
             position: fixed; 
             top: env(safe-area-inset-top); 
@@ -64,6 +67,11 @@
         .preview-pane { background: #fff; border-right: 1px solid var(--border); position: relative; display: flex; flex-direction: column; overflow: hidden; z-index: 10; }
         .control-pane { background: var(--panel-bg); padding: 50px 35px 40px; display: flex; flex-direction: column; position: relative; z-index: 10; height: 100%; overflow: hidden; }
         
+        /* 下の隙間対策：コントロールパネルも強制的に下まで伸ばす */
+        .control-pane {
+            padding-bottom: max(40px, env(safe-area-inset-bottom)); /* ホームバーとかぶらないよう余白確保 */
+        }
+
         .ui-part { transition: 0.4s; opacity: 1; }
         .saver-active .ui-part { opacity: 0; pointer-events: none; }
 
