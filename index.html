@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>EGG MOUSE SIMULATOR v147</title>
+    <title>EGG MOUSE SIMULATOR v149</title>
     
     <link rel="apple-touch-icon" href="image/top.png">
     
@@ -28,15 +28,31 @@
 
         html, body { 
             margin: 0; padding: 0; background: var(--primary-bg); 
-            overflow: hidden; height: 100%; width: 100%; position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
+            overflow: hidden; 
+            /* ★修正点：% ではなく dvh を使うことで、OSのバー有無に関わらず画面いっぱいに強制固定 */
+            height: 100dvh; 
+            width: 100vw; 
+            position: fixed;
+            top: 0; left: 0;
         }
 
         small { font-weight: 400 !important; }
 
         #global-guard { position: fixed; inset: 0; z-index: 99999; display: none; }
-        .manual-saver-trigger { position: fixed; top: 0; left: 0; width: 80px; height: 80px; z-index: 10000; cursor: pointer; }
-        .admin-trigger { position: absolute; top: 15px; right: 15px; width: 50px; height: 50px; background: none; border: none; cursor: pointer; font-size: 28px; color: #eee; z-index: 15000; display: flex; justify-content: center; align-items: center; }
+        
+        /* ★修正点：OSのステータスバーと重ならないよう、セーフエリア分を下げる */
+        .manual-saver-trigger { 
+            position: fixed; 
+            top: env(safe-area-inset-top); /* ここが変わりました */
+            left: 0; 
+            width: 80px; height: 80px; z-index: 10000; cursor: pointer; 
+        }
+        .admin-trigger { 
+            position: absolute; 
+            top: calc(15px + env(safe-area-inset-top)); /* ここが変わりました */
+            right: 15px; 
+            width: 50px; height: 50px; background: none; border: none; cursor: pointer; font-size: 28px; color: #eee; z-index: 15000; display: flex; justify-content: center; align-items: center; 
+        }
 
         .app-grid { display: grid; grid-template-columns: 1.6fr 1fr; height: 100%; width: 100%; position: relative; }
         .preview-pane { background: #fff; border-right: 1px solid var(--border); position: relative; display: flex; flex-direction: column; overflow: hidden; z-index: 10; }
@@ -358,8 +374,8 @@
             if(i.scale < 1) { i.scale += 0.04; if(i.scale > 1) i.scale = 1; }
             if(i !== grabbedItem){ 
 
-		let speed = Math.sqrt(i.vx * i.vx + i.vy * i.vy);
-                const minSpeed = 0.04; // ここをいじると「最低のゆらゆら感」が変わります
+        let speed = Math.sqrt(i.vx * i.vx + i.vy * i.vy);
+                const minSpeed = 0.04; 
                 
                 if(speed > 0 && speed < minSpeed) {
                     let ratio = minSpeed / speed;
@@ -367,16 +383,14 @@
                     i.vy *= ratio;
                 }
 
-
-
-                i.x += i.vx; // i.dx を足さない（もう 0 なので）
+                i.x += i.vx; 
                 i.y += i.vy; 
                 i.rot += i.dr;
                 i.vx = Math.max(-10, Math.min(10, i.vx)); 
-		i.vy = Math.max(-10, Math.min(10, i.vy));
+        i.vy = Math.max(-10, Math.min(10, i.vy));
                 i.vx*=0.985; 
-		i.vy*=0.985; 
-		i.dr*=0.996; 
+        i.vy*=0.985; 
+        i.dr*=0.996; 
 
                 if(i.x < 0){ i.x=0; i.dx=Math.abs(i.dx); i.vx*=-0.8; } else if(i.x > lx){ i.x=lx; i.dx=-Math.abs(i.dx); i.vx*=-0.8; }
                 if(i.y < 0){ i.y=0; i.dy=Math.abs(i.dy); i.vy*=-0.8; } else if(i.y > ly){ i.y=ly; i.dy=-Math.abs(i.dy); i.vy*=-0.8; }
@@ -429,12 +443,9 @@
             x:Math.random()*80+5,
             y:Math.random()*70+5,
             rot:Math.random()*360,
-//*0にする
             dx:(Math.random()-0.5)*0.10*0,
             dy:(Math.random()-0.5)*0.10*0,
-//ここまで
             dr:(Math.random()-0.5)*15,
-//もともと０だったが、初速をつける
             vx: (Math.random()-0.5) * 0.8, 
             vy: (Math.random()-0.5) * 0.8,
             scale: isInitial ? 1 : 0 
