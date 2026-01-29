@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>EGG MOUSE SIMULATOR v153</title>
+    <title>EGG MOUSE SIMULATOR v154</title>
     
     <link rel="apple-touch-icon" href="image/top.png">
     
@@ -15,7 +15,7 @@
 
     <style>
         :root {
-            --primary-bg: #ffffff; /* ★背景を真っ白に変更 */
+            --primary-bg: #ffffff;
             --panel-bg: #ffffff; 
             --border: #e5e5ea;
             --text-sub: #8e8e93; --alert: #ff3b30; --disabled: #d1d1d6; --overlay-dim: rgba(0,0,0,0.4);
@@ -28,7 +28,6 @@
             font-family: 'Futura PT', Futura, 'Noto Sans JP', sans-serif;
         }
 
-        /* 隙間対策：全画面固定 + 上下特大背景 */
         html {
             background-color: var(--primary-bg);
             height: 100%;
@@ -44,6 +43,7 @@
             height: 100%;
         }
 
+        /* 隙間対策の特大背景 */
         body::before {
             content: "";
             position: fixed;
@@ -59,7 +59,7 @@
 
         #global-guard { position: fixed; inset: 0; z-index: 99999; display: none; }
         
-        /* UI位置 */
+        /* UIパーツ */
         .manual-saver-trigger { 
             position: fixed; 
             top: env(safe-area-inset-top); 
@@ -76,14 +76,11 @@
         .app-grid { display: grid; grid-template-columns: 1.6fr 1fr; height: 100%; width: 100%; position: relative; }
         .preview-pane { background: #fff; border-right: 1px solid var(--border); position: relative; display: flex; flex-direction: column; overflow: hidden; z-index: 10; }
         
-        /* コントロールパネル：ボタン位置の調整 */
+        /* ★修正：padding-bottomをセーフエリアのみ（+0px）にしてボタンを限界まで下げる */
         .control-pane { 
             background: var(--panel-bg); 
-            /* 上・左右はそのまま、下だけ計算式を変更 */
             padding: 50px 35px 0; 
-            /* ★ここを修正：セーフエリア＋少しの余白(10px)だけ確保し、以前より下に下げる */
-            padding-bottom: calc(10px + env(safe-area-inset-bottom));
-            
+            padding-bottom: env(safe-area-inset-bottom); /* ここでギリギリまで下げる */
             display: flex; flex-direction: column; 
             position: relative; z-index: 10; height: 100%; overflow: hidden; 
         }
@@ -121,7 +118,9 @@
         .cover-item.active { border: 2.5px solid #000; background: #fafafa; }
         .cover-thumb { width: 55%; height: 55%; object-fit: contain; }
 
-        .community-area-box { flex: 1; position: relative; overflow: hidden; background: #fcfcfc; border-radius: 20px; border: 1px dashed var(--border); cursor: grab; touch-action: none; z-index: 5; margin-bottom: 25px; min-height: 100px; }
+        /* ★修正：COMMUNITYエリアの下マージンを詰める（25px→15px） */
+        .community-area-box { flex: 1; position: relative; overflow: hidden; background: #fcfcfc; border-radius: 20px; border: 1px dashed var(--border); cursor: grab; touch-action: none; z-index: 5; margin-bottom: 15px; min-height: 100px; }
+        
         #saver-layer { position: fixed; inset: 0; background: #fff; z-index: 9000; display: none; cursor: grab; touch-action: none; }
         body.saver-active #saver-layer { display: block; }
         
@@ -130,7 +129,14 @@
         @keyframes unlockBounce { 0% { transform: translateY(0); } 40% { transform: translateY(-15px); } 100% { transform: translateY(0); } }
         .is-unlocking { animation: unlockBounce 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
-        #saver-guide { position: fixed; bottom: 60px; right: 60px; width: 540px; opacity: 0; transition: 0.5s; z-index: 11000; pointer-events: none; cursor: pointer; }
+        /* ★修正：セーバー戻るボタンを右下のPOST NOW位置に合わせる */
+        #saver-guide { 
+            position: fixed; 
+            bottom: calc(10px + env(safe-area-inset-bottom)); /* 少し下げた */
+            right: 35px; /* 右の余白(35px)に合わせる */
+            width: 540px; 
+            opacity: 0; transition: 0.5s; z-index: 11000; pointer-events: none; cursor: pointer; 
+        }
 
         .submit-btn { width: 100%; padding: 22px; background: #000; color: #fff; border: none; border-radius: 20px; font-size: 20px; font-weight: 900; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; letter-spacing: 0.08em; }
         .submit-btn:disabled { background: var(--disabled); color: #8e8e93; }
@@ -449,7 +455,6 @@
     
     function loadCommunity(it){ 
         if(it){ 
-            // ★v153修正：画像の読み込みが間に合っていない場合の待機処理を追加
             if(validCoverIdsForRandom.length === 0) {
                 setTimeout(() => loadCommunity(true), 500);
                 return;
