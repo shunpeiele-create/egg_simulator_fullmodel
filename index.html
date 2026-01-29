@@ -357,9 +357,27 @@
         communityItems.forEach(i=>{
             if(i.scale < 1) { i.scale += 0.04; if(i.scale > 1) i.scale = 1; }
             if(i !== grabbedItem){ 
-                i.x+=(i.dx+i.vx); i.y+=(i.dy+i.vy); i.rot+=i.dr; 
-                i.vx = Math.max(-10, Math.min(10, i.vx)); i.vy = Math.max(-10, Math.min(10, i.vy));
-                i.vx*=0.98; i.vy*=0.98; i.dr*=0.99; 
+
+		let speed = Math.sqrt(i.vx * i.vx + i.vy * i.vy);
+                const minSpeed = 0.04; // ここをいじると「最低のゆらゆら感」が変わります
+                
+                if(speed > 0 && speed < minSpeed) {
+                    let ratio = minSpeed / speed;
+                    i.vx *= ratio;
+                    i.vy *= ratio;
+                }
+
+
+
+                i.x += i.vx; // i.dx を足さない（もう 0 なので）
+                i.y += i.vy; 
+                i.rot += i.dr;
+                i.vx = Math.max(-10, Math.min(10, i.vx)); 
+		i.vy = Math.max(-10, Math.min(10, i.vy));
+                i.vx*=0.985; 
+		i.vy*=0.985; 
+		i.dr*=0.996; 
+
                 if(i.x < 0){ i.x=0; i.dx=Math.abs(i.dx); i.vx*=-0.8; } else if(i.x > lx){ i.x=lx; i.dx=-Math.abs(i.dx); i.vx*=-0.8; }
                 if(i.y < 0){ i.y=0; i.dy=Math.abs(i.dy); i.vy*=-0.8; } else if(i.y > ly){ i.y=ly; i.dy=-Math.abs(i.dy); i.vy*=-0.8; }
             }
@@ -411,10 +429,14 @@
             x:Math.random()*80+5,
             y:Math.random()*70+5,
             rot:Math.random()*360,
-            dx:(Math.random()-0.5)*0.10,
-            dy:(Math.random()-0.5)*0.10,
+//*0にする
+            dx:(Math.random()-0.5)*0.10*0,
+            dy:(Math.random()-0.5)*0.10*0,
+//ここまで
             dr:(Math.random()-0.5)*15,
-            vx:0, vy:0,
+//もともと０だったが、初速をつける
+            vx: (Math.random()-0.5) * 0.8, 
+            vy: (Math.random()-0.5) * 0.8,
             scale: isInitial ? 1 : 0 
         }; 
         (isSaverActive ? document.getElementById('saver-layer') : document.getElementById('community-area')).appendChild(el); 
