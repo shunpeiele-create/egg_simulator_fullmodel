@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>EGG MOUSE SIMULATOR v152</title>
+    <title>EGG MOUSE SIMULATOR v153</title>
     
     <link rel="apple-touch-icon" href="image/top.png">
     
@@ -15,7 +15,9 @@
 
     <style>
         :root {
-            --primary-bg: #ffffff; --panel-bg: #ffffff; --border: #e5e5ea;
+            --primary-bg: #ffffff; /* ★背景を真っ白に変更 */
+            --panel-bg: #ffffff; 
+            --border: #e5e5ea;
             --text-sub: #8e8e93; --alert: #ff3b30; --disabled: #d1d1d6; --overlay-dim: rgba(0,0,0,0.4);
         }
         
@@ -26,7 +28,7 @@
             font-family: 'Futura PT', Futura, 'Noto Sans JP', sans-serif;
         }
 
-        /* ★v152修正：隙間対策の決定版 */
+        /* 隙間対策：全画面固定 + 上下特大背景 */
         html {
             background-color: var(--primary-bg);
             height: 100%;
@@ -42,23 +44,22 @@
             height: 100%;
         }
 
-        /* ★ここがポイント：画面より上下に大きい「背景の膜」を張る */
         body::before {
             content: "";
             position: fixed;
-            top: -200px;    /* 上に大きくハミ出す */
-            bottom: -200px; /* 下に大きくハミ出す */
+            top: -200px;    
+            bottom: -200px; 
             left: 0; 
             right: 0;
             background-color: var(--primary-bg);
-            z-index: -9999; /* 一番奥に配置 */
+            z-index: -9999; 
         }
 
         small { font-weight: 400 !important; }
 
         #global-guard { position: fixed; inset: 0; z-index: 99999; display: none; }
         
-        /* UI位置：前回のGOODな高さを維持 */
+        /* UI位置 */
         .manual-saver-trigger { 
             position: fixed; 
             top: env(safe-area-inset-top); 
@@ -74,13 +75,19 @@
 
         .app-grid { display: grid; grid-template-columns: 1.6fr 1fr; height: 100%; width: 100%; position: relative; }
         .preview-pane { background: #fff; border-right: 1px solid var(--border); position: relative; display: flex; flex-direction: column; overflow: hidden; z-index: 10; }
-        .control-pane { background: var(--panel-bg); padding: 50px 35px 40px; display: flex; flex-direction: column; position: relative; z-index: 10; height: 100%; overflow: hidden; }
         
-        /* 下の隙間対策：コントロールパネルの背景色も突き抜けるように微調整 */
-        .control-pane {
-            padding-bottom: max(40px, env(safe-area-inset-bottom)); 
+        /* コントロールパネル：ボタン位置の調整 */
+        .control-pane { 
+            background: var(--panel-bg); 
+            /* 上・左右はそのまま、下だけ計算式を変更 */
+            padding: 50px 35px 0; 
+            /* ★ここを修正：セーフエリア＋少しの余白(10px)だけ確保し、以前より下に下げる */
+            padding-bottom: calc(10px + env(safe-area-inset-bottom));
+            
+            display: flex; flex-direction: column; 
+            position: relative; z-index: 10; height: 100%; overflow: hidden; 
         }
-
+        
         .ui-part { transition: 0.4s; opacity: 1; }
         .saver-active .ui-part { opacity: 0; pointer-events: none; }
 
@@ -442,7 +449,11 @@
     
     function loadCommunity(it){ 
         if(it){ 
-            // 最初の5つを生成
+            // ★v153修正：画像の読み込みが間に合っていない場合の待機処理を追加
+            if(validCoverIdsForRandom.length === 0) {
+                setTimeout(() => loadCommunity(true), 500);
+                return;
+            }
             for(let i=0; i<5; i++){ 
                 if(validCoverIdsForRandom.length) addCommunityItem(Math.floor(Math.random()*5)+1, validCoverIdsForRandom[Math.floor(Math.random()*validCoverIdsForRandom.length)], true); 
             } 
