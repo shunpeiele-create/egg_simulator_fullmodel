@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>EGG MOUSE SIMULATOR v149</title>
+    <title>EGG MOUSE SIMULATOR v150</title>
     
     <link rel="apple-touch-icon" href="image/top.png">
     
@@ -26,30 +26,36 @@
             font-family: 'Futura PT', Futura, 'Noto Sans JP', sans-serif;
         }
 
+        /* ★v150修正：上下左右強制ピン留め方式 */
         html, body { 
-            margin: 0; padding: 0; background: var(--primary-bg); 
+            margin: 0; padding: 0; 
+            background: var(--primary-bg); /* 背景色を徹底 */
             overflow: hidden; 
-            /* ★修正点：% ではなく dvh を使うことで、OSのバー有無に関わらず画面いっぱいに強制固定 */
-            height: 100dvh; 
-            width: 100vw; 
+            
             position: fixed;
-            top: 0; left: 0;
+            top: 0; 
+            left: 0; 
+            right: 0; 
+            bottom: 0; /* 強制的に下端まで伸ばす */
+            
+            width: 100%;
+            height: 100%;
         }
 
         small { font-weight: 400 !important; }
 
         #global-guard { position: fixed; inset: 0; z-index: 99999; display: none; }
         
-        /* ★修正点：OSのステータスバーと重ならないよう、セーフエリア分を下げる */
+        /* セーフエリア対応 */
         .manual-saver-trigger { 
             position: fixed; 
-            top: env(safe-area-inset-top); /* ここが変わりました */
+            top: env(safe-area-inset-top); 
             left: 0; 
             width: 80px; height: 80px; z-index: 10000; cursor: pointer; 
         }
         .admin-trigger { 
             position: absolute; 
-            top: calc(15px + env(safe-area-inset-top)); /* ここが変わりました */
+            top: calc(15px + env(safe-area-inset-top)); 
             right: 15px; 
             width: 50px; height: 50px; background: none; border: none; cursor: pointer; font-size: 28px; color: #eee; z-index: 15000; display: flex; justify-content: center; align-items: center; 
         }
