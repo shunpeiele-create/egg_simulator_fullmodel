@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>EGG MOUSE SIMULATOR v154</title>
+    <title>EGG MOUSE SIMULATOR v155</title>
     
     <link rel="apple-touch-icon" href="image/top.png">
     
@@ -43,7 +43,6 @@
             height: 100%;
         }
 
-        /* 隙間対策の特大背景 */
         body::before {
             content: "";
             position: fixed;
@@ -59,7 +58,6 @@
 
         #global-guard { position: fixed; inset: 0; z-index: 99999; display: none; }
         
-        /* UIパーツ */
         .manual-saver-trigger { 
             position: fixed; 
             top: env(safe-area-inset-top); 
@@ -76,11 +74,11 @@
         .app-grid { display: grid; grid-template-columns: 1.6fr 1fr; height: 100%; width: 100%; position: relative; }
         .preview-pane { background: #fff; border-right: 1px solid var(--border); position: relative; display: flex; flex-direction: column; overflow: hidden; z-index: 10; }
         
-        /* ★修正：padding-bottomをセーフエリアのみ（+0px）にしてボタンを限界まで下げる */
+        /* ★v155修正：セーフエリア(env)を無視して、物理固定値(25px)まで下げる */
         .control-pane { 
             background: var(--panel-bg); 
             padding: 50px 35px 0; 
-            padding-bottom: env(safe-area-inset-bottom); /* ここでギリギリまで下げる */
+            padding-bottom: 25px; /* ここ！虚無を無視して物理的に攻める数値 */
             display: flex; flex-direction: column; 
             position: relative; z-index: 10; height: 100%; overflow: hidden; 
         }
@@ -118,7 +116,7 @@
         .cover-item.active { border: 2.5px solid #000; background: #fafafa; }
         .cover-thumb { width: 55%; height: 55%; object-fit: contain; }
 
-        /* ★修正：COMMUNITYエリアの下マージンを詰める（25px→15px） */
+        /* ★v155修正：COMMUNITYエリアの余白調整 */
         .community-area-box { flex: 1; position: relative; overflow: hidden; background: #fcfcfc; border-radius: 20px; border: 1px dashed var(--border); cursor: grab; touch-action: none; z-index: 5; margin-bottom: 15px; min-height: 100px; }
         
         #saver-layer { position: fixed; inset: 0; background: #fff; z-index: 9000; display: none; cursor: grab; touch-action: none; }
@@ -129,11 +127,11 @@
         @keyframes unlockBounce { 0% { transform: translateY(0); } 40% { transform: translateY(-15px); } 100% { transform: translateY(0); } }
         .is-unlocking { animation: unlockBounce 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
-        /* ★修正：セーバー戻るボタンを右下のPOST NOW位置に合わせる */
+        /* ★v155修正：セーバー戻るボタンも物理固定値(25px)に合わせる */
         #saver-guide { 
             position: fixed; 
-            bottom: calc(10px + env(safe-area-inset-bottom)); /* 少し下げた */
-            right: 35px; /* 右の余白(35px)に合わせる */
+            bottom: 25px; /* ここ！POST NOWと同じ高さに */
+            right: 35px; 
             width: 540px; 
             opacity: 0; transition: 0.5s; z-index: 11000; pointer-events: none; cursor: pointer; 
         }
