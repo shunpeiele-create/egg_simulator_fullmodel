@@ -253,4 +253,172 @@
         const clone=document.getElementById('main-preview').cloneNode(true); clone.style.opacity='1'; clone.classList.remove('animate-on','rise','fly');
         clone.style.top = "50%"; clone.style.left = "50%"; clone.style.transform = "translate(-50%, -50%) scale(1)";
         target.appendChild(clone);
-        document.getElementById('agree-cb').checked
+        document.getElementById('agree-cb').checked = false; document.getElementById('finalPostBtn').disabled = true;
+        surveyInput = { age: '', gender: '' }; document.querySelectorAll('#survey-overlay .chip').forEach(c => c.classList.remove('active'));
+        document.getElementById('survey-overlay').classList.add('show');
+    }
+    function hideSurvey(){ document.getElementById('survey-overlay').classList.remove('show'); }
+    function setSurvey(k,v){ surveyInput[k]=v; document.querySelectorAll(`#${k}-chips .chip`).forEach(c=>c.classList.toggle('active', c.innerText.includes(v))); }
+    function updateFinalBtn(){ document.getElementById('finalPostBtn').disabled = !document.getElementById('agree-cb').checked; }
+
+    function openAdmin(){ 
+        const MASTER_PW = "8056"; 
+        const pw = prompt("Password"); 
+        if(pw === MASTER_PW) { 
+            document.getElementById('admin-overlay').classList.add('show'); 
+        } else if(pw !== null) { 
+            alert("Incorrect password"); 
+        } 
+    }
+
+    function closeAdmin(){ document.getElementById('admin-overlay').classList.remove('show'); }
+    function toggleSurveySetting(){ isSurveyEnabled=!isSurveyEnabled; const s = JSON.parse(localStorage.getItem(CONFIG.settingsKey)||'{}'); s.survey=isSurveyEnabled; localStorage.setItem(CONFIG.settingsKey, JSON.stringify(s)); updateSurveyUI(); }
+    function updateSurveyUI(){ const l=document.getElementById('survey-status-label'); l.innerText=isSurveyEnabled?'ON':'OFF'; l.style.color=isSurveyEnabled?'#34c759':'#8e8e93'; }
+
+    function onPointerDown(e){ 
+        if(e.cancelable) e.preventDefault(); 
+        const target = isSaverActive ? document.getElementById('saver-layer') : document.getElementById('community-area'); 
+        const rect = target.getBoundingClientRect(); 
+        const tx = ((e.clientX - rect.left) / rect.width) * 100, ty = ((e.clientY - rect.top) / rect.height) * 100; 
+        let found = null; 
+        communityItems.forEach(i=>{ 
+            const hr = isSaverActive ? 6.5 : 4.5; 
+            if(Math.sqrt((tx-i.x)**2+(ty-i.y)**2) < hr) found=i; 
+        }); 
+        if(found){ 
+            grabbedItem=found; grabbedItem.vx=0; grabbedItem.vy=0; 
+        } else { 
+            communityItems.forEach(i=>{ 
+                const dx=i.x-tx, dy=i.y-ty, d=Math.sqrt(dx*dx+dy*dy), r=isSaverActive?20:15; 
+                if(d < r){ 
+                    i.vx+=(dx/d)*(r-d)*0.6; i.vy+=(dy/d)*(r-d)*0.6; 
+                    i.dr+=(Math.random()-0.5)*15; 
+                } 
+            }); 
+        } 
+    }
+    
+    function onPointerMove(e){ 
+        if(!grabbedItem)return; 
+        if(e.cancelable) e.preventDefault(); 
+        const target = isSaverActive ? document.getElementById('saver-layer') : document.getElementById('community-area'); 
+        const rect = target.getBoundingClientRect(); 
+        const tx=((e.clientX-rect.left)/rect.width)*100, ty=((e.clientY-rect.top)/rect.height)*100; 
+        grabbedItem.vx = (tx - grabbedItem.x) * 0.85; grabbedItem.vy = (ty - grabbedItem.y) * 0.85; 
+        grabbedItem.x = tx; grabbedItem.y = ty; 
+    }
+    
+    function updateAnimation(){
+        // ★v162修正：壁を広げて見えない壁を消滅させる
+        const lx=isSaverActive?94:92, ly=isSaverActive?93:89, md=isSaverActive?7:8; 
+        
+        for(let i=0; i<communityItems.length; i++){
+            for(let j=i+1; j<communityItems.length; j++){
+                const a=communityItems[i], b=communityItems[j]; if(a===grabbedItem||b===grabbedItem)continue;
+                const dx=b.x-a.x, dy=b.y-a.y, d = Math.sqrt(dx*dx + dy*dy);
+                if(d < md && d > 0.1){ 
+                    const ang = Math.atan2(dy, dx);
+                    let f;
+                    if (isSaverActive) {
+                        if (d < 5.5) f = 0.9; else f = (md - d) * 0.04;
+                    } else {
+                        if (d < 7.5) f = 1.5; else f = (md - d) * 0.16;
+                    }
+                    a.vx -= Math.cos(ang) * f; a.vy -= Math.sin(ang) * f;
+                    b.vx += Math.cos(ang) * f; b.vy += Math.sin(ang) * f;
+                    
+                    const impact = Math.sqrt((a.vx - b.vx)**2 + (a.vy - b.vy)**2);
+                    const spin = 2.0; 
+                    a.dr += (Math.random()-0.5) * impact * spin;
+                    b.dr += (Math.random()-0.5) * impact * spin;
+                }
+            }
+        }
+        communityItems.forEach(i=>{
+            if(i.scale < 1) { i.scale += 0.04; if(i.scale > 1) i.scale = 1; }
+            if(i !== grabbedItem){ 
+                let speed = Math.sqrt(i.vx * i.vx + i.vy * i.vy);
+                const minSpeed = 0.04; 
+                if(speed > 0 && speed < minSpeed) {
+                    let ratio = minSpeed / speed;
+                    i.vx *= ratio;
+                    i.vy *= ratio;
+                }
+                i.x += i.vx; 
+                i.y += i.vy; 
+                i.rot += i.dr;
+                i.vx = Math.max(-10, Math.min(10, i.vx)); 
+                i.vy = Math.max(-10, Math.min(10, i.vy));
+                i.vx*=0.985; 
+                i.vy*=0.985; 
+                i.dr*=0.996; 
+                
+                if(i.x < 0){ i.x=0; i.vx*=-0.8; i.dr+=i.vy*0.8; } else if(i.x > lx){ i.x=lx; i.vx*=-0.8; i.dr-=i.vy*0.8; }
+                if(i.y < 0){ i.y=0; i.vy*=-0.8; i.dr-=i.vx*0.8; } else if(i.y > ly){ i.y=ly; i.vy*=-0.8; i.dr+=i.vx*0.8; }
+            }
+            i.el.style.left = i.x + '%'; i.el.style.top = i.y + '%'; 
+            i.el.style.transform = `rotate(${i.rot}deg) scale(${i.scale}) translateZ(0)`;
+        });
+        requestAnimationFrame(updateAnimation);
+    }
+    
+    function resetInactivityTimer(){ clearTimeout(inactivityTimer); inactivityTimer=setTimeout(()=>startSaver(), CONFIG.inactivityLimit); }
+    function startSaver(){ 
+        if(isSaverActive)return; isSaverActive=true; 
+        document.body.classList.add('saver-active'); 
+        communityItems.forEach(i => { document.getElementById('saver-layer').appendChild(i.el); i.el.style.width = "80px"; i.el.style.height = "104px"; }); 
+        document.getElementById('saver-guide').style.opacity = 1; document.getElementById('saver-guide').style.pointerEvents = 'auto'; 
+    }
+    function stopSaver(e){ 
+        if(e) e.stopPropagation(); isSaverActive = false; 
+        document.body.classList.remove('saver-active'); 
+        communityItems.forEach(i => { document.getElementById('community-area').appendChild(i.el); i.el.style.width = "34px"; i.el.style.height = "44px"; }); 
+        document.getElementById('saver-guide').style.opacity = 0; document.getElementById('saver-guide').style.pointerEvents = 'none'; 
+        resetInactivityTimer(); 
+    }
+    function updatePreview(){ document.getElementById('img-base').src=`image/base_${selectedBase}.png`; const c=document.getElementById('img-cover'); if(selectedCover>0){ c.src=`image/cover_${selectedCover}.png`; c.style.opacity="1"; } else { c.style.opacity="0"; } }
+    
+    function loadCommunity(it){ 
+        if(it){ 
+            if(validCoverIdsForRandom.length === 0) {
+                setTimeout(() => loadCommunity(true), 500);
+                return;
+            }
+            for(let i=0; i<5; i++){ 
+                if(validCoverIdsForRandom.length) addCommunityItem(Math.floor(Math.random()*5)+1, validCoverIdsForRandom[Math.floor(Math.random()*validCoverIdsForRandom.length)], true); 
+            } 
+        } 
+    }
+
+    function addCommunityItem(b,c,isInitial){ 
+        if(communityItems.length >= CONFIG.maxItems) {
+            const oldest = communityItems.shift();
+            oldest.el.style.opacity = '0';
+            setTimeout(() => oldest.el.remove(), 500);
+        }
+        const el=document.createElement('div'); el.className='community-item'; 
+        el.style.width = "34px"; el.style.height = "44px";
+        el.innerHTML=`<img src="image/base_${b}.png" style="width:100%;position:absolute;"><img src="image/cover_${c}.png" style="width:100%;position:absolute;opacity:${c===0?0:1}" onerror="this.style.opacity=0">`; 
+        
+        const it={
+            el,
+            x:Math.random()*80+5,
+            y:Math.random()*70+5,
+            rot:Math.random()*360,
+            dx:(Math.random()-0.5)*0.10*0,
+            dy:(Math.random()-0.5)*0.10*0,
+            dr:(Math.random()-0.5)*15,
+            vx: (Math.random()-0.5) * 0.8, 
+            vy: (Math.random()-0.5) * 0.8,
+            scale: isInitial ? 1 : 0 
+        }; 
+        (isSaverActive ? document.getElementById('saver-layer') : document.getElementById('community-area')).appendChild(el); 
+        communityItems.push(it);
+    }
+
+    function downloadCSV(){ const d = JSON.parse(localStorage.getItem(CONFIG.storageKey)||'[]'); const csv = "\ufeffTime,Base,Cover,Age,Gender\n" + d.map(i=>`${i.t},${i.b},${i.c},${i.age},${i.gen}`).join("\n"); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); a.download = `booth_results.csv`; a.click(); }
+    function resetData(){ if(confirm("Reset ALL data and Community?")) { localStorage.removeItem(CONFIG.storageKey); communityItems.forEach(i => i.el.remove()); communityItems = []; location.reload(); } }
+    init();
+</script>
+</body>
+</html>
