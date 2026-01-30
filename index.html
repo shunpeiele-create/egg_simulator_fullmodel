@@ -327,7 +327,7 @@
                     if (isSaverActive) { if (d < 5.5) f = 0.9; else f = (md - d) * 0.04; } else { if (d < 7.5) f = 1.5; else f = (md - d) * 0.16; }
                     a.vx -= Math.cos(ang) * f; a.vy -= Math.sin(ang) * f; b.vx += Math.cos(ang) * f; b.vy += Math.sin(ang) * f;
                     const impact = Math.sqrt((a.vx - b.vx)**2 + (a.vy - b.vy)**2);
-                    const spin = 2.0; 
+                    const spin = 3.0; 
                     a.dr += (Math.random()-0.5) * impact * spin; b.dr += (Math.random()-0.5) * impact * spin;
                 }
             }
