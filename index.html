@@ -360,6 +360,16 @@
     function downloadCSV(){ const d = JSON.parse(localStorage.getItem(CONFIG.storageKey)||'[]'); const csv = "\ufeffTime,Base,Cover,Age,Gender\n" + d.map(i=>`${i.t},${i.b},${i.c},${i.age},${i.gen}`).join("\n"); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); a.download = `booth_results.csv`; a.click(); }
     function resetData(){ if(confirm("Reset ALL data and Community?")) { localStorage.removeItem(CONFIG.storageKey); communityItems.forEach(i => i.el.remove()); communityItems = []; location.reload(); } }
     init();
+    // index.html の <script> の一番最後に追加
+    // ↓↓↓ この部分が必要です！ ↓↓↓
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').then(reg => {
+            console.log('Service Worker Registered!', reg);
+        }).catch(err => {
+            console.log('Service Worker Failed', err);
+        });
+    }
+    
 </script>
 </body>
 </html>
