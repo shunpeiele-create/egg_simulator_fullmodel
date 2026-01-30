@@ -1,5 +1,5 @@
 // sw.js
-const CACHE_NAME = 'egg-mouse-v158-offline';
+const CACHE_NAME = 'egg-mouse-v162-offline';
 const ASSETS = [
     './',
     './index.html',
