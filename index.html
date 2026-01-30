@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>EGG MOUSE SIMULATOR v156</title>
+    <title>EGG MOUSE SIMULATOR v157</title>
     
     <link rel="apple-touch-icon" href="image/top.png">
     
@@ -30,7 +30,7 @@
 
         html {
             background-color: var(--primary-bg);
-            height: 100vh; /* 物理的な画面高さを強制 */
+            height: 100vh; 
             overflow: hidden;
         }
 
@@ -40,7 +40,7 @@
             position: fixed;
             inset: 0;
             width: 100vw;
-            height: 100vh; /* ここも物理高さ */
+            height: 100vh; 
         }
 
         /* 隙間対策の特大背景 */
@@ -75,22 +75,21 @@
         .app-grid { display: grid; grid-template-columns: 1.6fr 1fr; height: 100%; width: 100%; position: relative; }
         .preview-pane { background: #fff; border-right: 1px solid var(--border); position: relative; display: flex; flex-direction: column; overflow: hidden; z-index: 10; }
         
-        /* ★v156修正：パネル自体は全画面使い切る設定 */
         .control-pane { 
             background: var(--panel-bg); 
-            padding: 50px 35px 0; 
-            padding-bottom: 0 !important; /* 親切な余白を完全削除 */
+            padding: 50px 35px 0; /* 右の余白はここ(35px)で決まっている */
+            padding-bottom: 0 !important; 
             display: flex; flex-direction: column; 
             position: relative; z-index: 10; 
             height: 100%; 
             overflow: hidden; 
         }
 
-        /* ★v156修正：ボタンエリアをフレックスで最下部に突き放す */
+        /* ★v157修正：ボタンエリアの下余白を右と同じ35pxに統一 */
         #btn-container {
-            margin-top: auto; /* これで親枠の一番下まで強制移動 */
-            padding-bottom: 10px; /* 物理的な画面の端から10pxだけ浮かす（ベゼル湾曲対策） */
-            background: var(--panel-bg); /* 背景色を確保 */
+            margin-top: auto; 
+            padding-bottom: 35px; /* ここを10px→35pxに変更 */
+            background: var(--panel-bg); 
         }
         
         .ui-part { transition: 0.4s; opacity: 1; }
@@ -126,7 +125,6 @@
         .cover-item.active { border: 2.5px solid #000; background: #fafafa; }
         .cover-thumb { width: 55%; height: 55%; object-fit: contain; }
 
-        /* COMMUNITYエリアの調整 */
         .community-area-box { flex: 1; position: relative; overflow: hidden; background: #fcfcfc; border-radius: 20px; border: 1px dashed var(--border); cursor: grab; touch-action: none; z-index: 5; margin-bottom: 15px; min-height: 100px; }
         
         #saver-layer { position: fixed; inset: 0; background: #fff; z-index: 9000; display: none; cursor: grab; touch-action: none; }
@@ -137,11 +135,11 @@
         @keyframes unlockBounce { 0% { transform: translateY(0); } 40% { transform: translateY(-15px); } 100% { transform: translateY(0); } }
         .is-unlocking { animation: unlockBounce 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
-        /* ★v156修正：セーバー戻るボタンも物理固定値(10px)に合わせる */
+        /* ★v157修正：セーバー戻るボタンの下位置も35pxに統一 */
         #saver-guide { 
             position: fixed; 
-            bottom: 10px; 
-            right: 35px; 
+            bottom: 35px; /* ここを10px→35pxに変更 */
+            right: 35px; /* 右と同じ値 */
             width: 540px; 
             opacity: 0; transition: 0.5s; z-index: 11000; pointer-events: none; cursor: pointer; 
         }
