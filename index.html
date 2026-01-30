@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>EGG MOUSE SIMULATOR v160</title>
+    <title>EGG MOUSE SIMULATOR v161</title>
     
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="image/top.png">
@@ -15,172 +15,61 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
 
     <style>
-        :root {
-            --primary-bg: #ffffff;
-            --panel-bg: #ffffff; 
-            --border: #e5e5ea;
-            --text-sub: #8e8e93; --alert: #ff3b30; --disabled: #d1d1d6; --overlay-dim: rgba(0,0,0,0.4);
-        }
-        
-        * { 
-            box-sizing: border-box; -webkit-tap-highlight-color: transparent; 
-            -webkit-user-select: none; -webkit-touch-callout: none;
-            user-select: none; outline: none; 
-            font-family: 'Futura PT', Futura, 'Noto Sans JP', sans-serif;
-        }
-
-        html {
-            background-color: var(--primary-bg);
-            height: 100vh; 
-            overflow: hidden;
-        }
-
-        body { 
-            margin: 0; padding: 0; 
-            overflow: hidden; 
-            position: fixed;
-            inset: 0;
-            width: 100vw;
-            height: 100vh; 
-        }
-
-        body::before {
-            content: "";
-            position: fixed;
-            top: -200px;    
-            bottom: -200px; 
-            left: 0; 
-            right: 0;
-            background-color: var(--primary-bg);
-            z-index: -9999; 
-        }
-
+        :root { --primary-bg: #ffffff; --panel-bg: #ffffff; --border: #e5e5ea; --text-sub: #8e8e93; --alert: #ff3b30; --disabled: #d1d1d6; --overlay-dim: rgba(0,0,0,0.4); }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; -webkit-touch-callout: none; user-select: none; outline: none; font-family: 'Futura PT', Futura, 'Noto Sans JP', sans-serif; }
+        html { background-color: var(--primary-bg); height: 100vh; overflow: hidden; }
+        body { margin: 0; padding: 0; overflow: hidden; position: fixed; inset: 0; width: 100vw; height: 100vh; }
+        body::before { content: ""; position: fixed; top: -200px; bottom: -200px; left: 0; right: 0; background-color: var(--primary-bg); z-index: -9999; }
         small { font-weight: 400 !important; }
-
         #global-guard { position: fixed; inset: 0; z-index: 99999; display: none; }
-        
-        .manual-saver-trigger { 
-            position: fixed; 
-            top: env(safe-area-inset-top); 
-            left: 0; 
-            width: 80px; height: 80px; z-index: 10000; cursor: pointer; 
-        }
-        .admin-trigger { 
-            position: absolute; 
-            top: calc(15px + env(safe-area-inset-top)); 
-            right: 15px; 
-            width: 50px; height: 50px; background: none; border: none; cursor: pointer; font-size: 28px; color: #eee; z-index: 15000; display: flex; justify-content: center; align-items: center; 
-        }
-
+        .manual-saver-trigger { position: fixed; top: env(safe-area-inset-top); left: 0; width: 80px; height: 80px; z-index: 10000; cursor: pointer; }
+        .admin-trigger { position: absolute; top: calc(15px + env(safe-area-inset-top)); right: 15px; width: 50px; height: 50px; background: none; border: none; cursor: pointer; font-size: 28px; color: #eee; z-index: 15000; display: flex; justify-content: center; align-items: center; }
         .app-grid { display: grid; grid-template-columns: 1.6fr 1fr; height: 100%; width: 100%; position: relative; }
         .preview-pane { background: #fff; border-right: 1px solid var(--border); position: relative; display: flex; flex-direction: column; overflow: hidden; z-index: 10; }
-        
-        .control-pane { 
-            background: var(--panel-bg); 
-            padding: 50px 35px 0; 
-            padding-bottom: 0 !important; 
-            display: flex; flex-direction: column; 
-            position: relative; z-index: 10; 
-            height: 100%; 
-            overflow: hidden; 
-        }
-
-        #btn-container {
-            margin-top: auto; 
-            padding-bottom: 35px; 
-            background: var(--panel-bg); 
-        }
-        
+        .control-pane { background: var(--panel-bg); padding: 50px 35px 0; padding-bottom: 0 !important; display: flex; flex-direction: column; position: relative; z-index: 10; height: 100%; overflow: hidden; }
+        #btn-container { margin-top: auto; padding-bottom: 35px; background: var(--panel-bg); }
         .ui-part { transition: 0.4s; opacity: 1; }
         .saver-active .ui-part { opacity: 0; pointer-events: none; }
-
         .title-area { position: absolute; top: 60px; left: 0; width: 100%; height: 60px; display: flex; justify-content: center; z-index: 20; pointer-events: none; }
         .preview-outer { flex: 1; display: flex; justify-content: center; align-items: center; position: relative; width: 100%; height: 100%; }
         .default-img { position: absolute; width: 90%; max-height: 70%; object-fit: contain; z-index: 1; transition: opacity 0.8s ease; }
-        
         .preview-wrapper { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1); height: 55%; aspect-ratio: 179 / 232; display: flex; justify-content: center; align-items: center; z-index: 2; opacity: 0; }
         .preview-wrapper.animate-on { transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55), opacity: 0.4s ease; }
         .preview-wrapper.rise { transform: translate(-50%, -65%) scale(1.15); opacity: 1 !important; filter: drop-shadow(0 30px 20px rgba(0,0,0,0.15)); }
-
-        @keyframes snapLaunch {
-            0% { transform: translate(-50%, -65%) scale(1.15); opacity: 1; }
-            15% { transform: translate(-50%, -45%) scale(1.0); opacity: 1; }
-            30% { transform: translate(-50%, -75%) scale(1.2); opacity: 1; }
-            100% { transform: translate(-50%, -200vh) scale(0.2); opacity: 0; }
-        }
+        @keyframes snapLaunch { 0% { transform: translate(-50%, -65%) scale(1.15); opacity: 1; } 15% { transform: translate(-50%, -45%) scale(1.0); opacity: 1; } 30% { transform: translate(-50%, -75%) scale(1.2); opacity: 1; } 100% { transform: translate(-50%, -200vh) scale(0.2); opacity: 0; } }
         .preview-wrapper.fly { animation: snapLaunch 1.1s cubic-bezier(0.45, 0, 0.55, 1) forwards !important; }
         .layer { position: absolute; width: 100%; height: 100%; object-fit: contain; transition: 0.4s ease; }
-
         .section { margin-bottom: 40px; transition: opacity 0.4s ease; transform-origin: center top; }
         .section.locked { opacity: 0.15; pointer-events: none; }
         .section-label { font-size: 17px; font-weight: 900; color: #000; margin-bottom: 12px; display: block; letter-spacing: 0.05em; }
-        
         .grid-colors { display: flex; gap: 16px; flex-wrap: wrap; }
         .color-dot { width: 50px; height: 50px; border-radius: 50%; border: 1px solid var(--border); overflow: hidden; background-size: 180%; background-position: center 10%; cursor: pointer; position: relative; }
         .color-dot.active::after { content: ''; position: absolute; inset: 0; border: 3px solid #000; border-radius: 50%; }
-        
         .grid-covers { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; width: 100%; }
         .cover-item { aspect-ratio: 1.1; border: 1px solid var(--border); border-radius: 10px; background: #fff; display: flex; justify-content: center; align-items: center; padding: 4px; cursor: pointer; }
         .cover-item.active { border: 2.5px solid #000; background: #fafafa; }
         .cover-thumb { width: 55%; height: 55%; object-fit: contain; }
-
         .community-area-box { flex: 1; position: relative; overflow: hidden; background: #fcfcfc; border-radius: 20px; border: 1px dashed var(--border); cursor: grab; touch-action: none; z-index: 5; margin-bottom: 15px; min-height: 100px; }
-        
-        #saver-layer { 
-            position: fixed; inset: 0; 
-            background: #fff; 
-            z-index: 9000; 
-            cursor: grab; 
-            touch-action: none; 
-            opacity: 0; 
-            pointer-events: none; 
-            transition: opacity 0s; 
-        }
-        body.saver-active #saver-layer { 
-            opacity: 1; 
-            pointer-events: auto; 
-            transition: opacity 1.2s ease; 
-        }
-        
+        #saver-layer { position: fixed; inset: 0; background: #fff; z-index: 9000; cursor: grab; touch-action: none; opacity: 0; pointer-events: none; transition: opacity 0s; }
+        body.saver-active #saver-layer { opacity: 1; pointer-events: auto; transition: opacity 1.2s ease; }
         .community-item { position: absolute; width: 34px; height: 44px; pointer-events: none; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); will-change: left, top, transform; backface-visibility: hidden; transition: width 0.8s, height 0.8s, opacity 0.5s; }
-
         @keyframes unlockBounce { 0% { transform: translateY(0); } 40% { transform: translateY(-15px); } 100% { transform: translateY(0); } }
         .is-unlocking { animation: unlockBounce 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-
-        #saver-guide { 
-            position: fixed; 
-            bottom: 35px; 
-            right: 35px; 
-            width: 540px; 
-            opacity: 0; transition: 0.5s; z-index: 11000; pointer-events: none; cursor: pointer; 
-        }
-
+        #saver-guide { position: fixed; bottom: 35px; right: 35px; width: 540px; opacity: 0; transition: 0.5s; z-index: 11000; pointer-events: none; cursor: pointer; }
         .submit-btn { width: 100%; padding: 22px; background: #000; color: #fff; border: none; border-radius: 20px; font-size: 20px; font-weight: 900; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; letter-spacing: 0.08em; }
         .submit-btn:disabled { background: var(--disabled); color: #8e8e93; }
-
         #cover-alert { color: var(--alert); font-weight: 900; min-height: 1.4em; margin-bottom: 10px; display: block; }
-
         .overlay { position: fixed; inset: 0; background: var(--overlay-dim); z-index: 50000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.4s ease; }
         .overlay.show { display: flex; opacity: 1; }
-        
         .survey-card { background: #fff; width: 92%; max-width: 1280px; height: 72%; border-radius: 40px; overflow: hidden; display: grid; grid-template-columns: 1.1fr 1.2fr; box-shadow: 0 40px 100px rgba(0,0,0,0.3); }
         .survey-preview { background: #f9f9f9; display: flex; justify-content: center; align-items: center; padding: 50px; position: relative; overflow: hidden; }
         .survey-preview .preview-wrapper { height: 60%; width: 60%; max-height: 60%; max-width: 60%; opacity: 1 !important; }
         .survey-form { padding: 40px 60px; display: flex; flex-direction: column; justify-content: center; overflow-y: auto; }
-        
         .chip { padding: 14px 22px; border: 1px solid var(--border); border-radius: 12px; background: #fff; font-weight: 700; cursor: pointer; font-size: 14px; margin: 0 8px 8px 0; display: inline-block; }
         .chip.active { background: #000; color: #fff; }
-
         .agree-label { display: flex; align-items: center; gap: 12px; font-weight: 900; margin-bottom: 35px; cursor: pointer; color: var(--alert); white-space: nowrap; }
-
-        #thanks-overlay { 
-            position: absolute; inset: 0; 
-            background: rgba(255,255,255,0.92); 
-            display: none; justify-content: center; align-items: center; 
-            z-index: 500; flex-direction: column; opacity: 0; transition: opacity 0.4s ease; 
-        }
+        #thanks-overlay { position: absolute; inset: 0; background: rgba(255,255,255,0.92); display: none; justify-content: center; align-items: center; z-index: 500; flex-direction: column; opacity: 0; transition: opacity 0.4s ease; }
         #thanks-overlay.show { display: flex; opacity: 1; }
-
         .admin-menu { background: #fff; padding: 40px; border-radius: 30px; width: 500px; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,0.1); }
         .admin-btn { width: 100%; padding: 18px; margin: 5px 0; border: 1px solid #ddd; background: #fff; font-weight: 900; border-radius: 15px; cursor: pointer; }
     </style>
@@ -327,7 +216,6 @@
         const cs = document.getElementById('section-cover'); cs.classList.remove('locked');
         triggerBounce(cs); updatePreview();
         
-        // ★修正：まだカバーを選んでいない時だけ、メッセージを「カバーを選んで」に変更
         const alertEl = document.getElementById('cover-alert');
         if(!selectedCover || selectedCover === 0) {
             alertEl.innerHTML = 'Please choose a cover <small>(カバーを選んでください)</small>';
@@ -340,11 +228,9 @@
         
         const alertEl = document.getElementById('cover-alert');
         if(id === 0) {
-            // REMOVEされたら「カバーを選んで」に戻す
             alertEl.innerHTML = 'Please choose a cover <small>(カバーを選んでください)</small>';
             document.getElementById('submitBtn').disabled = true;
         } else {
-            // カバーを選んだらメッセージを消す
             alertEl.innerHTML = '&nbsp;'; 
             document.getElementById('submitBtn').disabled = false;
             triggerBounce(document.getElementById('submitBtn'));
@@ -359,7 +245,6 @@
         surveyInput = { age: '', gender: '' }; document.getElementById('agree-cb').checked = false;
         document.getElementById('section-cover').classList.add('locked'); document.getElementById('submitBtn').disabled=true;
         
-        // ★修正：リセット時は「本体を選んで」に戻す
         document.getElementById('cover-alert').innerHTML = 'Please select body color <small>(本体を選んでください)</small>';
     }
     
@@ -439,6 +324,12 @@
                     }
                     a.vx -= Math.cos(ang) * f; a.vy -= Math.sin(ang) * f;
                     b.vx += Math.cos(ang) * f; b.vy += Math.sin(ang) * f;
+                    
+                    // ★v161追加：衝突による回転トルク
+                    const impact = Math.sqrt((a.vx - b.vx)**2 + (a.vy - b.vy)**2);
+                    const spin = 2.0; 
+                    a.dr += (Math.random()-0.5) * impact * spin;
+                    b.dr += (Math.random()-0.5) * impact * spin;
                 }
             }
         }
@@ -460,8 +351,10 @@
                 i.vx*=0.985; 
                 i.vy*=0.985; 
                 i.dr*=0.996; 
-                if(i.x < 0){ i.x=0; i.dx=Math.abs(i.dx); i.vx*=-0.8; } else if(i.x > lx){ i.x=lx; i.dx=-Math.abs(i.dx); i.vx*=-0.8; }
-                if(i.y < 0){ i.y=0; i.dy=Math.abs(i.dy); i.vy*=-0.8; } else if(i.y > ly){ i.y=ly; i.dy=-Math.abs(i.dy); i.vy*=-0.8; }
+                
+                // ★v161追加：壁の摩擦による回転トルク
+                if(i.x < 0){ i.x=0; i.vx*=-0.8; i.dr+=i.vy*0.8; } else if(i.x > lx){ i.x=lx; i.vx*=-0.8; i.dr-=i.vy*0.8; }
+                if(i.y < 0){ i.y=0; i.vy*=-0.8; i.dr-=i.vx*0.8; } else if(i.y > ly){ i.y=ly; i.vy*=-0.8; i.dr+=i.vx*0.8; }
             }
             i.el.style.left = i.x + '%'; i.el.style.top = i.y + '%'; 
             i.el.style.transform = `rotate(${i.rot}deg) scale(${i.scale}) translateZ(0)`;
