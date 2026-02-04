@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>EGG MOUSE SIMULATOR v163</title>
+    <title>EGG MOUSE SIMULATOR v164</title>
     
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="image/top.png">
@@ -37,8 +37,14 @@
         /* 操作パネル (余白ゼロで下詰め) */
         .control-pane { background: var(--panel-bg); padding: 50px 35px 0; padding-bottom: 0 !important; display: flex; flex-direction: column; position: relative; z-index: 10; height: 100%; overflow: hidden; }
         
-        /* ボタンエリア (下35px均等配置) */
-        #btn-container { margin-top: auto; padding-bottom: 35px; background: var(--panel-bg); }
+        /* ボタンエリア (下35px均等配置) ★修正：z-index追加 */
+        #btn-container { 
+            margin-top: auto; 
+            padding-bottom: 35px; 
+            background: var(--panel-bg);
+            position: relative; /* 追加 */
+            z-index: 100;       /* 追加：これでマウス操作でも確実に反応します */
+        }
         
         /* フェードアニメーション */
         .ui-part { transition: 0.4s; opacity: 1; }
@@ -169,7 +175,8 @@
 </div>
 
 <script>
-    const CONFIG = { storageKey: 'egg_mouse_v131_data', settingsKey: 'egg_mouse_v130_set', inactivityLimit: 600000, baseCount: 5, coverMax: 11, maxItems: 20 };
+    // ★修正：タイムアウトを実質無効化（999999999ミリ秒）
+    const CONFIG = { storageKey: 'egg_mouse_v131_data', settingsKey: 'egg_mouse_v130_set', inactivityLimit: 999999999, baseCount: 5, coverMax: 11, maxItems: 20 };
     let communityItems = [], inactivityTimer, isSaverActive = false, grabbedItem = null;
     let selectedBase = null, selectedCover = null, validCoverIdsForRandom = [];
     let surveyInput = { age: '', gender: '' }, isSurveyEnabled = true;
@@ -360,16 +367,6 @@
     function downloadCSV(){ const d = JSON.parse(localStorage.getItem(CONFIG.storageKey)||'[]'); const csv = "\ufeffTime,Base,Cover,Age,Gender\n" + d.map(i=>`${i.t},${i.b},${i.c},${i.age},${i.gen}`).join("\n"); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); a.download = `booth_results.csv`; a.click(); }
     function resetData(){ if(confirm("Reset ALL data and Community?")) { localStorage.removeItem(CONFIG.storageKey); communityItems.forEach(i => i.el.remove()); communityItems = []; location.reload(); } }
     init();
-    // index.html の <script> の一番最後に追加
-    // ↓↓↓ この部分が必要です！ ↓↓↓
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js').then(reg => {
-            console.log('Service Worker Registered!', reg);
-        }).catch(err => {
-            console.log('Service Worker Failed', err);
-        });
-    }
-    
 </script>
 </body>
 </html>
